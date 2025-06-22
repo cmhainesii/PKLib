@@ -639,7 +639,9 @@ namespace PKLib
             return boxPokemon;
         }
 
-        public List<Pokemon> GetPartyPokemon()
+        
+
+        public List<Pokemon> GetPartyPokemon(bool sortByScore = false)
         {
             List<Pokemon> partyPokemon = new List<Pokemon>();
             Pokemon current;
@@ -763,6 +765,12 @@ namespace PKLib
                 {
                     Console.WriteLine($"Error: {ex.Message}");
                 }
+            }
+
+            // Sort if requested
+            if (sortByScore)
+            {
+                partyPokemon.Sort((x, y) => y.GetIvScore().CompareTo(x.GetIvScore()));
             }
 
             return partyPokemon;
