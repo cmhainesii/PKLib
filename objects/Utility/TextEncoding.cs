@@ -74,11 +74,22 @@ public static class TextEncoding {
         AddMapping('?', 0xE6);
         AddMapping('!', 0xE7);
         AddMapping('♂', 0xEF);
-        AddMapping('♂', 0xF5);
+        AddMapping('♀', 0xF5);
         AddMapping('/', 0xF3);
         AddMapping('.', 0xF2);
         AddMapping(',', 0xF4);
         AddMapping(' ', 0x7F);
+        
+        AddMapping('0', 0xF6);
+        AddMapping('1', 0xF7);
+        AddMapping('2', 0xF8);
+        AddMapping('3', 0xF9);
+        AddMapping('4', 0xFA);
+        AddMapping('5', 0xFB);
+        AddMapping('6', 0xFC);
+        AddMapping('7', 0xFD);
+        AddMapping('8', 0xFE);
+        AddMapping('9', 0xFF);
     }
 
     private static void AddMapping(char character, byte hexValue) {
@@ -130,5 +141,29 @@ public static class TextEncoding {
 
         return sb.ToString();
 
+    }
+
+    public static byte[] EncodeText(string text, byte delimiter = (byte)0x50)
+    {
+        List<byte> encodedText = new List<Byte>();
+
+        foreach (char current in text)
+        {
+            try {
+                byte encodedChar = GetHexValue(current);
+                encodedText.Add(encodedChar);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+        }
+
+        encodedText.Add(delimiter);
+
+        return encodedText.ToArray();
+
+        
     }
 }

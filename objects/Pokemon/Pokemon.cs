@@ -1,51 +1,51 @@
 using System.Text;
 
-internal struct IV
+public struct IV
 {
-    internal ushort Attack;
-    internal ushort Defense;
-    internal ushort Speed;
-    internal ushort Special;
-    internal ushort HP;
+    public ushort Attack;
+    public ushort Defense;
+    public ushort Speed;
+    public ushort Special;
+    public ushort HP;
 }
 
-internal struct Stats
+public struct Stats
 {
-    internal ushort Attack;
-    internal ushort Defense;
-    internal ushort SpecialAttack;
-    internal ushort SpecialDefense;
-    internal ushort Speed;
-    internal ushort HP;
+    public ushort Attack;
+    public ushort Defense;
+    public ushort SpecialAttack;
+    public ushort SpecialDefense;
+    public ushort Speed;
+    public ushort HP;
 }
 
-internal struct EVs
+public struct EVs
 {
-    internal ushort HP;
-    internal ushort Attack;
-    internal ushort Defense;
-    internal ushort Speed;
-    internal ushort Special;
+    public ushort HP;
+    public ushort Attack;
+    public ushort Defense;
+    public ushort Speed;
+    public ushort Special;
 }
 
-internal class Pokemon
+public class Pokemon
 {
-    internal readonly string speciesName;
-    internal readonly ushort level;
+    public readonly string speciesName;
+    public readonly ushort level;
 
-    internal readonly IV ivs;
-    internal readonly Stats stats;
-    internal readonly EVs evs;
+    public readonly IV ivs;
+    public readonly Stats stats;
+    public readonly EVs evs;
 
-    internal readonly string otName;
-    internal readonly string nickname;
-    internal string[] types;
+    public readonly string otName;
+    public readonly string nickname;
+    public string[] types;
 
-    internal readonly byte heldItem;
-    internal readonly ushort generation;
-    internal readonly int otId;
+    public readonly byte heldItem;
+    public readonly ushort generation;
+    public readonly int otId;
 
-    internal Pokemon(string name, ushort level, IV ivs, Stats stats, EVs evs, string otName, string nickname, string[] types, int otId, ushort generation, byte heldItem = 0)
+    public Pokemon(string name, ushort level, IV ivs, Stats stats, EVs evs, string otName, string nickname, string[] types, int otId, ushort generation, byte heldItem = 0)
     {
         this.speciesName = name;
         this.level = level;
@@ -88,13 +88,13 @@ internal class Pokemon
         sb.AppendLine($"{"Type 2:",16}{types[1],14}");
         sb.AppendLine();
         sb.AppendLine($"{"",16}{"IV Data",7}{"",13}");
-        sb.AppendLine($"{"HP:",16}{ivs.HP,14}");
-        sb.AppendLine($"{"Attack:",16}{ivs.Attack,14}");
-        sb.AppendLine($"{"Defense:",16}{ivs.Defense,14}");
-        sb.AppendLine($"{"Special:",16}{ivs.Special,14}");
-        sb.AppendLine($"{"Speed:",16}{ivs.Speed,14}");
+        sb.AppendLine($"{"HP:",16}{ivs.HP,13}{(ivs.HP == 15 ? "*" : "")}");
+        sb.AppendLine($"{"Attack:",16}{ivs.Attack,13}{(ivs.Attack == 15 ? "*" : "")}");
+        sb.AppendLine($"{"Defense:",16}{ivs.Defense,13}{(ivs.Defense == 15 ? "*" : "")}");
+        sb.AppendLine($"{"Special:",16}{ivs.Special,13}{(ivs.Special == 15 ? "*" : "")}");
+        sb.AppendLine($"{"Speed:",16}{ivs.Speed,13}{(ivs.Speed == 15 ? "*" : "")}");
         sb.AppendLine($"{"Score:",16}{GetIvScore(),14}");
-        sb.AppendLine($"{"Percentile:",16}{getIvPercentile(),13}{"%",1}");
+        sb.AppendLine($"{"Percentile:",16}{getIvPercentile(),13:F2}{"%",1}");
         
         if(GetStatScore() > 0)
         {
@@ -141,25 +141,24 @@ internal class Pokemon
         return speciesName;
     }
 
-    public ushort GetIvScore()
+    public int GetEvScore()
     {
-        return (ushort)(this.ivs.HP + this.ivs.Attack + this.ivs.Defense + this.ivs.Speed + (ivs.Special * 2));
-
+        return evs.HP + evs.Attack + evs.Defense + evs.Speed + (evs.Special * 2);
     }
 
-    public ushort GetEvScore()
+    public int GetStatScore()
     {
-        return (ushort)(evs.HP + evs.Attack + evs.Defense + evs.Speed + (evs.Special * 2));
+        return stats.HP + stats.Attack + stats.Defense + stats.Speed + stats.SpecialAttack + stats.SpecialDefense;
     }
 
-    public ushort GetStatScore()
+    public int GetIvScore()
     {
-        return (ushort)(stats.HP + stats.Attack + stats.Defense + stats.Speed + stats.SpecialAttack + stats.SpecialDefense);
+        return this.ivs.Attack + this.ivs.Defense + this.ivs.Speed + ivs.Special;
     }
 
     public double getIvPercentile()
     {
-        return Math.Round(GetIvScore() / 90.0 * 100.0, 2);
+        return Math.Round(GetIvScore() / 60.0 * 100.0, 2);
     }
 
 

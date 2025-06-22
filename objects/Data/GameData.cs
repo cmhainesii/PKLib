@@ -1,60 +1,57 @@
+using System.Diagnostics.CodeAnalysis;
+using System.IO.Pipelines;
 using System.Net.Mail;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Xml.XPath;
 using PKLib;
-namespace PKLib {
+namespace PKLib
+{
     public class GameData
     {
         // Constants - Hex Data Offset Locations
         internal const ushort BOX_SIZE_TO_FIRST_POKEMON_OFFSET = 0x16;
-        internal const ushort BOX_ONE_BEGIN = 0x4000;    
+        internal const ushort BOX_ONE_BEGIN = 0x4000;
         internal const ushort BOX_SEVEN_BEGIN = 0x6000;
-        
+
         internal const ushort OT_NICK_NEXT_NAME_OFFSET = 0x0B;
         public const ushort PARTY_SIZE_TO_FIRST_POKEMON_OFFSET = 0x08;
         private const ushort partyOtIdOffset = 0x0C;
-        
-        private readonly static ushort[] genderAndShadowOffsetCrystal = {0x3E3D, 0x206A};
-        
-
-        
-        
-        
-
+        private readonly static ushort[] genderAndShadowOffsetCrystal = { 0x3E3D, 0x206A };
         internal const int boxItemsSizeOffset = 0x27E6;
         internal const int boxFirstItemOffset = boxItemsSizeOffset + 0x01;
 
 
         // Fields
-        private byte[] fileData;
-        public string fileName { get; set; }
-        public ushort generation { get; set; }
-        internal bool crystal { get; set; }
-        public Party partyPokemon;
-        public PokemonPC pcPokemon;
+        private byte[] _fileData;
+        public string _fileName { get; set; }
+        public ushort _generation { get; set; }
+        public bool _isCrystal { get; set; }
+        private Party partyPokemon;
+        private PokemonPC pcPokemon;
         public Bag items { get; set; }
         public ItemBox boxItems { get; }
 
-        internal Offsets offsets;
+        public Offsets offsets;
         internal ItemData itemData;
         internal PokemonData pokemonData;
 
         // Constructor
         public GameData(string fileName)
         {
-            fileData = File.ReadAllBytes(fileName);
-            this.fileName = fileName;
-            this.generation = determineGeneration();
-            offsets = new Offsets(this.generation, this.crystal);
-            itemData = new ItemData(generation);
-            pokemonData = new PokemonData(generation);
+            _fileData = File.ReadAllBytes(fileName);
+            this._fileName = fileName;
+            this._generation = determineGeneration();
+            offsets = new Offsets(this._generation, this._isCrystal);
+            itemData = new ItemData(_generation);
+            pokemonData = new PokemonData(_generation);
 
 
 
             partyPokemon = new Party(this);
             pcPokemon = new PokemonPC(this);
-            if(generation == 1) {
+            if (_generation == 1)
+            {
                 items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
             }
             else
@@ -64,26 +61,27 @@ namespace PKLib {
                 GetBagItems(offsets.keyItemsPocketOffset, 26, false),
                 GetTMPocketItems(offsets.tmPocketOffset));
             }
-            
+
             this.boxItems = new ItemBox(GetBoxItems());
 
 
         }
 
-         public GameData(byte[] fileData)
+        public GameData(byte[] fileData)
         {
-            this.fileData = fileData;
-            this.fileName = "save.sav";
-            this.generation = determineGeneration();
-            offsets = new Offsets(this.generation, this.crystal);
-            itemData = new ItemData(generation);
-            pokemonData = new PokemonData(generation);
+            this._fileData = fileData;
+            this._fileName = "save.sav";
+            this._generation = determineGeneration();
+            offsets = new Offsets(this._generation, this._isCrystal);
+            itemData = new ItemData(_generation);
+            pokemonData = new PokemonData(_generation);
 
 
 
             partyPokemon = new Party(this);
             pcPokemon = new PokemonPC(this);
-            if(generation == 1) {
+            if (_generation == 1)
+            {
                 items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
             }
             else
@@ -93,7 +91,7 @@ namespace PKLib {
                 GetBagItems(offsets.keyItemsPocketOffset, 26, false),
                 GetTMPocketItems(offsets.tmPocketOffset));
             }
-            
+
             this.boxItems = new ItemBox(GetBoxItems());
 
 
@@ -114,23 +112,23 @@ namespace PKLib {
             }
             for (int i = 0; i < newData.Length; ++i)
             {
-                fileData[startOffset + i] = newData[i];
+                _fileData[startOffset + i] = newData[i];
             }
         }
 
         internal void SetGender(byte gender)
         {
-            if(!crystal)
+            if (!_isCrystal)
             {
                 Console.WriteLine("Error, changing gender is only supported for Pokemon Crystal saves. Aborting.");
                 return;
             }
-            if(gender > 1 || gender < 0)
+            if (gender > 1 || gender < 0)
             {
                 Console.WriteLine("Error: Gender must be set to either 0 (male) or 1 (female). Aborting");
                 return;
             }
-            
+
             PatchHexByte(gender, genderAndShadowOffsetCrystal[0]);
             PatchHexByte(gender, genderAndShadowOffsetCrystal[1]);
         }
@@ -140,57 +138,51 @@ namespace PKLib {
             ReadOnlySpan<byte> save = GetSaveData();
             bool valid = false;
             valid = ValidateList(save, 0x2F2C, 6) && ValidateList(save, 0x30C0, 20);
-            Console.WriteLine($"Found valid gen 1 lists (US): {valid}");
             if (valid)
             {
-                this.generation = (ushort)1;
-                this.crystal = false;
-                return this.generation;
+                this._generation = (ushort)1;
+                this._isCrystal = false;
+                return this._generation;
             }
 
 
             valid = ValidateList(save, 0x2ED5, 6) && ValidateList(save, 0x302D, 30);
-            Console.WriteLine($"Found valid gen 1 lists (J): {valid}");
             if (valid)
             {
-                this.generation = (ushort)1;
-                this.crystal = false;
-                return this.generation;
+                this._generation = (ushort)1;
+                this._isCrystal = false;
+                return this._generation;
             }
 
             valid = ValidateList(save, 0x288A, 6) && ValidateList(save, 0x2D6C, 20);
-            Console.WriteLine($"Found valid gen 2 (GS) lists (US): {valid}");
             if (valid)
             {
-                this.generation = (ushort)2;
-                this.crystal = false;
-                return this.generation;
+                this._generation = (ushort)2;
+                this._isCrystal = false;
+                return this._generation;
             }
 
             valid = ValidateList(save, 0x2865, 6) && ValidateList(save, 0x2D10, 20);
-            Console.WriteLine($"Found valid gen 2 (C) lists (US): {valid}");
             if (valid)
             {
-                this.generation = (ushort)2;
-                this.crystal = true;
-                return this.generation;
+                this._generation = (ushort)2;
+                this._isCrystal = true;
+                return this._generation;
             }
 
             valid = ValidateList(save, 0x283E, 6) && ValidateList(save, 0x2D10, 30);
-            Console.WriteLine($"Found valid gen 2 (GS) lists (J): {valid}");
             if (valid)
             {
-                this.generation = (ushort)2;
-                this.crystal = false;
-                return this.generation;
+                this._generation = (ushort)2;
+                this._isCrystal = false;
+                return this._generation;
             }
             valid = ValidateList(save, 0x281A, 6) && ValidateList(save, 0x2D10, 30);
-            Console.WriteLine($"Found valid gen 2 (C) lists (J): {valid}");
             if (valid)
             {
-                this.generation = (ushort)2;
-                this.crystal = true;
-                return this.generation;
+                this._generation = (ushort)2;
+                this._isCrystal = true;
+                return this._generation;
             }
 
             return 0;
@@ -202,83 +194,104 @@ namespace PKLib {
             return listLength <= maxEntries && data[offset + listLength + 1] == 0xFF;
         }
 
+
         public ReadOnlySpan<byte> GetSaveData()
         {
-            return fileData;
+            return _fileData;
         }
         // Insert a single byte of data at a given offset
         public void PatchHexByte(byte newData, int offset)
         {
-            fileData[offset] = newData;
+            _fileData[offset] = newData;
         }
 
-        // Calculate checksum for generation 1 save file
-        internal int CalculateChecksum()
+        public void UpdateBoxChecksums()
         {
-            ushort startOffset = (ushort)offsets.checksumStart;
-            ushort endOffset = (ushort)offsets.checksumEnd;
-
-            if (startOffset < 0 || endOffset >= GetSaveData().Length || startOffset > endOffset)
+            if (_generation != 1)
             {
-                throw new ArgumentException("Invalid start or end offset.");
+                return;
             }
 
-            int checksum = 0;
+            byte[] checksumsBank1 = new byte[6];
+            // int[] checksumsBank2 = new int[6];
+            int currentBoxStart = offsets.bankTwoBoxesStart;
 
-            if (generation == 1)
+            for (int i = 0; i < 6; ++i)
             {
+                int checksum = CalculateChecksum(currentBoxStart, currentBoxStart + offsets.boxDataEnd);
+                byte lowByte = (byte)(checksum & 0xFF);
+                checksumsBank1[i] = lowByte;
+                currentBoxStart += offsets.nextBoxOffset;
+            }
 
-                // Iterate through the specified range and calculate the checksum
-                for (ushort i = startOffset; i <= endOffset; i++)
-                {
-                    checksum += fileData[i];
-                }
+            for (int i = 1; i <= 6; ++i)
+            {
+                Console.WriteLine($"Box {i} Checksum: {checksumsBank1[i - 1]:X2}");
+            }
 
-                return ~checksum;
+            PatchHexBytes(checksumsBank1, offsets.boxChecksumsStart + 1);
+
+            int bankTwoWholeChecksum = CalculateChecksum(offsets.bankTwoBoxesStart, offsets.bankTwoBoxesEnd);
+            byte bankTwoLowByte = (byte)(bankTwoWholeChecksum & 0xFF);
+            Console.WriteLine($"Bank 2 Checksum: {bankTwoLowByte:X2}");
+            PatchHexByte(bankTwoLowByte, offsets.boxChecksumsStart);
+
+
+
+
+
+        }
+
+
+
+        public int CalculateChecksum(int start, int end)
+        {
+            int sum = 0;
+            Console.WriteLine($"Calculating checksum from {start:X} to {end:X}");
+            for (int i = start; i <= end; i++)
+            {
+                sum += _fileData[i];
+            }
+
+            if (_generation == 1)
+            {
+                return ~sum & 0xFF;
             }
             else
             {
-                for(ushort i = startOffset; i <= endOffset; ++i)
-                {
-                    checksum += fileData[i];
-                }
-                
-                checksum = checksum & 0xFFFF; // Isolate checksum to least significant two bytes
-                checksum = (checksum >> 8) | ((checksum & 0xFF) << 8); // Swap the high and low bytes
-                return checksum;
-
-                
+                sum = ((sum & 0xFF) << 8) | ((sum >> 8) & 0xFF); // Swap bytes for big-endian
+                return sum & 0xFFFF;
             }
         }
 
         // Fetch a byte of data from a given offset
         public byte GetData(int offset)
         {
-            if (offset < 0 || offset >= fileData.Length)
+            if (offset < 0 || offset >= _fileData.Length)
             {
                 throw new ArgumentException("Invalid offset provided. Aborting data retrevial.");
             }
-            return fileData[offset];
+            return _fileData[offset];
         }
 
         // Fetch a byte array from fileData between the start and end offset (inclusive).
         public byte[] GetData(int startOffset, int endOffset)
         {
-            if (startOffset < 0 || endOffset < startOffset || endOffset >= fileData.Length)
+            if (startOffset < 0 || endOffset < startOffset || endOffset >= _fileData.Length)
             {
                 throw new ArgumentException("Invalid start or end offset.");
             }
 
             int length = endOffset - startOffset + 1;
             byte[] result = new byte[length];
-            Array.Copy(fileData, startOffset, result, 0, length);
+            Array.Copy(_fileData, startOffset, result, 0, length);
 
             return result;
         }
 
         public int GetDataSize()
         {
-            return fileData.Length;
+            return _fileData.Length;
         }
 
         public void EmptyBag()
@@ -289,10 +302,15 @@ namespace PKLib {
             PatchHexBytes(bagClear, offsets.bagSizeOffset);
         }
 
-        public void WriteToFile()
+        public void ToFile()
         {
-            UpdateChecksum(CalculateChecksum());
-            File.WriteAllBytes(fileName, fileData);
+            UpdateBoxChecksums();
+            UpdateMainChecksum(CalculateChecksum(
+                offsets.mainChecksumStart,
+                offsets.mainChecksumEnd
+            ));
+
+            File.WriteAllBytes(_fileName, _fileData);
         }
 
         public string GetTrainerName()
@@ -302,7 +320,7 @@ namespace PKLib {
 
         public string GetRivalName()
         {
-            return TextEncoding.GetEncodedText(this, offsets.rivalNameOffset, 0x50, offsets.trainerNameOffset);
+            return TextEncoding.GetEncodedText(this, offsets.rivalNameOffset, 0x50, offsets.trainerNameSize);
         }
 
         public void ChangeRivalName(string name)
@@ -330,16 +348,16 @@ namespace PKLib {
 
             for (int i = 0; i < newId.Length; ++i)
             {
-                fileData[idOffset + i] = newId[i];
+                _fileData[idOffset + i] = newId[i];
             }
 
             int partyOffset = 0x2F2C;
             int firstPokemon = partyOffset + 0x08;
             int firstPokemonOtId = firstPokemon + partyOtIdOffset;
 
-            Console.WriteLine("Total Pokemon in Party: " + fileData[partyOffset]);
+            Console.WriteLine("Total Pokemon in Party: " + _fileData[partyOffset]);
             int currentOffset = firstPokemonOtId;
-            for (int j = 0; j < fileData[partyOffset]; ++j)
+            for (int j = 0; j < _fileData[partyOffset]; ++j)
             {
                 PatchHexBytes(newId, currentOffset);
                 currentOffset += 0x2C;
@@ -352,9 +370,9 @@ namespace PKLib {
 
             byte data = GetSaveData()[offsets.badgesOffset];
 
-            for(byte index = 0; index < 8; ++index)
+            for (byte index = 0; index < 8; ++index)
             {
-                if(HexFunctions.BitIsSet(data, index))
+                if (HexFunctions.BitIsSet(data, index))
                 {
                     values[index] = true;
                 }
@@ -376,7 +394,7 @@ namespace PKLib {
         {
             byte[] money = GetData(offsets.moneyOffset, offsets.moneyOffset + 2);
 
-            if (generation == 1)
+            if (_generation == 1)
             {
                 uint result = (uint)(DecodeBCD(money[0]) * 10000 +
                             DecodeBCD(money[1]) * 100 +
@@ -398,7 +416,7 @@ namespace PKLib {
             ushort sum = 0;
             for (int i = offsets.ownedOffset; i < offsets.ownedOffset + offsets.ownedSeenSize; ++i)
             {
-                sum += getSumBits(fileData[i]);
+                sum += getSumBits(_fileData[i]);
             }
 
             return sum;
@@ -409,7 +427,7 @@ namespace PKLib {
             ushort sum = 0;
             for (int i = offsets.seenOffset; i < offsets.seenOffset + offsets.ownedSeenSize; ++i)
             {
-                sum += getSumBits(fileData[i]);
+                sum += getSumBits(_fileData[i]);
             }
 
             return sum;
@@ -442,11 +460,11 @@ namespace PKLib {
             if (GetData(offsets.currentlySetBoxOffset) + 1 == boxNum)
             {
                 return (ushort)GetData(offsets.currentBoxDataBegin);
-                
+
             }
             else
             {
-                if(generation == 1)
+                if (_generation == 1)
                 {
                     if (boxNum < 7)
                     {
@@ -459,7 +477,7 @@ namespace PKLib {
                 }
                 else
                 {
-                return GetData(BOX_ONE_BEGIN + ((boxNum - 1) * offsets.nextBoxOffset));   
+                    return GetData(BOX_ONE_BEGIN + ((boxNum - 1) * offsets.nextBoxOffset));
                 }
             }
         }
@@ -519,7 +537,7 @@ namespace PKLib {
             }
             else
             {
-                if(generation == 1)
+                if (_generation == 1)
                 {
                     if (boxNumber < 7)
                     {
@@ -559,12 +577,13 @@ namespace PKLib {
                 speed = (ushort)(ss >> 4);
                 special = (ushort)(ss & 0x0F);
                 hp = CalculateHpIv(attack, defense, special, speed);
-                if(generation == 1)
+                if (_generation == 1)
                 {
                     types[0] = TypeData.GetName(GetData(currentPokemonOffset + 0x05));
                     types[1] = TypeData.GetName(GetData(currentPokemonOffset + 0x06));
                 }
-                else {
+                else
+                {
                     PokemonData.PokemonType[] typeData = pokemonData.GetPokemonType(GetData(currentPokemonOffset));
                     types[0] = typeData[0].ToString();
                     types[1] = typeData[1].ToString();
@@ -577,7 +596,7 @@ namespace PKLib {
                     Defense = defense,
                     Speed = speed,
                     Special = special,
-                    
+
                 };
 
                 cursor = (ushort)(currentPokemonOffset + offsets.boxEvOffset);
@@ -601,7 +620,7 @@ namespace PKLib {
                 hexIn = GetData(cursor++, cursor++);
                 int id = hexIn[0] << 8 | hexIn[1];
 
-                
+
                 // Get OT name
 
                 otNameOffset = currentBoxOffset + offsets.boxOtNameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
@@ -620,7 +639,7 @@ namespace PKLib {
             return boxPokemon;
         }
 
-        internal List<Pokemon> GetPartyPokemon()
+        public List<Pokemon> GetPartyPokemon()
         {
             List<Pokemon> partyPokemon = new List<Pokemon>();
             Pokemon current;
@@ -659,7 +678,8 @@ namespace PKLib {
                     defense = (ushort)(ad & 0x0F);
                     speed = (ushort)(ss >> 4);
                     special = (ushort)(ss & 0x0F);
-                    if(generation == 1)
+
+                    if (_generation == 1)
                     {
                         types[0] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset));
                         types[1] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset + 1));
@@ -678,27 +698,45 @@ namespace PKLib {
                         Speed = speed,
                         Special = special
                     };
-                    
+
                     ushort cursor = (ushort)(currentPokemonOffset + offsets.statsOffset);
-                    stats = new Stats {
-                        HP = (ushort)(GetData(cursor++) + GetData(cursor++)),
-                        Attack = (ushort)(GetData(cursor++) + GetData(cursor++)),
-                        Defense = (ushort)(GetData(cursor++) + GetData(cursor++)),
-                        Speed = (ushort)(GetData(cursor++) + GetData(cursor++)),
-                        SpecialAttack = (ushort)(GetData(cursor) + GetData(cursor + 1)),
-                        SpecialDefense = (ushort)(GetData(cursor++) + GetData(cursor++))
-                    };
+                    if (_generation == 1)
+                    {
+                        stats = new Stats
+                        {
+                            HP = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Attack = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Defense = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Speed = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            SpecialAttack = (ushort)(GetData(cursor) + GetData(cursor + 1)),
+                            SpecialDefense = (ushort)(GetData(cursor++) + GetData(cursor++))
+                        };
+                    }
+                    else
+                    {
+                        stats = new Stats
+                        {
+                            HP = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Attack = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Defense = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            Speed = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            SpecialAttack = (ushort)(GetData(cursor++) + GetData(cursor++)),
+                            SpecialDefense = (ushort)(GetData(cursor++) + GetData(cursor++))
+                        };
+                    }
+
 
                     cursor = (ushort)(currentPokemonOffset + offsets.evOffset);
                     ushort[] values = new ushort[5];
                     byte[] hexIn = new byte[2];
-                    for ( ushort index = 0; index < 5; ++index)
+                    for (ushort index = 0; index < 5; ++index)
                     {
                         hexIn[0] = GetData(cursor++);
                         hexIn[1] = GetData(cursor++);
                         values[index] = (ushort)((hexIn[0] << 8) | hexIn[1]);
                     }
-                    evs = new EVs {
+                    evs = new EVs
+                    {
                         HP = values[0],
                         Attack = values[1],
                         Defense = values[2],
@@ -717,7 +755,7 @@ namespace PKLib {
                     nickOffset = (offsets.partySizeOffset + offsets.partyNickNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                     nickname = TextEncoding.GetEncodedText(this, nickOffset, 0x50, offsets.trainerNameSize);
 
-                    current = new Pokemon(speciesName, level, ivs, stats, evs, otName, nickname, types, id, generation);
+                    current = new Pokemon(speciesName, level, ivs, stats, evs, otName, nickname, types, id, _generation);
                     partyPokemon.Add(current);
                     currentPokemonOffset += (ushort)offsets.partyNextPokemonOffset; // increment by 44 bytes to get to next party pokemon
                 }
@@ -790,25 +828,28 @@ namespace PKLib {
         {
             using (StreamWriter writer = new StreamWriter(filename))
             {
-                if(generation == 1)
+                if (_generation == 1)
                 {
-                // Write the header row
-                writer.WriteLine("Species,Level,HP,Attack,Defense,Special Attack,Special Defense,Speed,IV Score,Percentile,Original Trainer,OT Id,Nickname");
+                    // Write the header row
+                    writer.WriteLine("Species,Level,HP,Attack,Defense,Special Attack,Special Defense,Speed,IV Score,Percentile,Original Trainer,OT Id,Nickname");
 
                     foreach (Pokemon current in pokemon)
                     {
                         writer.WriteLine($"{current.speciesName},{current.level}," +
                         $"{current.ivs.HP},{current.ivs.Attack},{current.ivs.Defense}," +
                         $"{current.ivs.Special}, {current.ivs.Special},{current.ivs.Speed}," +
-                        $"{current.GetIvScore()}, {current.getIvPercentile()/100},{current.otName}," +
+                        $"{current.GetIvScore()}, {current.getIvPercentile() / 100},{current.otName}," +
                         $"{current.otId:D5},{current.nickname}");
                     }
                 }
-                else {
+                else
+                {
                     writer.WriteLine("Species,Level,Held Item,HP,Attack,Defense,Special Attack,Special Defense,Speed,IV Score,Percentile,Original Trainer, OT Id,Nickname");
-                    foreach (Pokemon current in pokemon) {
+                    foreach (Pokemon current in pokemon)
+                    {
                         writer.Write($"{current.speciesName},{current.level},");
-                        if(current.heldItem == 0) {
+                        if (current.heldItem == 0)
+                        {
                             writer.Write("None,");
                         }
                         else
@@ -818,11 +859,11 @@ namespace PKLib {
                         writer.Write($"{current.ivs.HP},{current.ivs.Attack},{current.ivs.Defense},");
                         writer.Write($"{current.ivs.Special},{current.ivs.Special},");
                         writer.Write($"{current.ivs.Speed},");
-                        writer.Write($"{current.GetIvScore()},{current.getIvPercentile()/100},");
+                        writer.Write($"{current.GetIvScore()},{current.getIvPercentile() / 100},");
                         writer.Write($"{current.otName},{current.otId:D5},");
                         writer.WriteLine($"{current.nickname}");
                     }
-                    
+
 
                 }
             }
@@ -842,14 +883,23 @@ namespace PKLib {
 
             return encodedText;
         }
-        
+
+        public void EnableGSBallEvent()
+        {
+            const int GSFlagOffset = 0x3E3C;
+            const int backupOffset = 0x3E44;
+            const byte EnabledValue = 0x0B;
+            PatchHexByte(EnabledValue, GSFlagOffset);
+            PatchHexByte(EnabledValue, backupOffset);
+        }
+
 
 
         public List<Item> GetBoxItems()
         {
             List<Item> items = new List<Item>();
 
-            if (generation == 2)
+            if (_generation == 2)
             {
                 return items;
             }
@@ -884,7 +934,8 @@ namespace PKLib {
             return items;
         }
 
-        public List<Item> GetTMPocketItems(int offset) {
+        public List<Item> GetTMPocketItems(int offset)
+        {
             List<Item> tms = new List<Item>();
 
             byte[] tmOffsets = {
@@ -897,12 +948,12 @@ namespace PKLib {
                 0xDF, 0xE0, 0xE1, 0xE2, 0xE3,
                 0xE4, 0xE5, 0xE6, 0xE7, 0xE8,
                 0xE9, 0xEA, 0xEB, 0xEC, 0xED,
-                0xEE, 0xEF, 0xF0, 0xF1, 0xF2, 
-                0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 
+                0xEE, 0xEF, 0xF0, 0xF1, 0xF2,
+                0xF3, 0xF4, 0xF5, 0xF6, 0xF7,
                 0xF8, 0xF9, 0xFA, 0xFB, 0xFC,
                 0xFD, 0xFE
-                
-            }; 
+
+            };
 
             try
             {
@@ -912,7 +963,7 @@ namespace PKLib {
                 for (ushort i = 0; i < 57; ++i)
                 {
                     itemQty = GetData(offset++);
-                    if(itemQty > 0)
+                    if (itemQty > 0)
                     {
                         currentItem = new Item(tmOffsets[i], itemQty, itemData.GetName(tmOffsets[i]));
                         tms.Add(currentItem);
@@ -930,7 +981,7 @@ namespace PKLib {
         {
             List<Item> items = new List<Item>();
 
-            
+
             try
             {
                 ushort bagQty = GetData(offset);
@@ -947,21 +998,23 @@ namespace PKLib {
                         break;
                     }
                     itemHexCode = GetData(currentOffset);
-                    if(!qtys) {
+                    if (!qtys)
+                    {
                         itemQty = 1;
                     }
                     else
                     {
                         itemQty = GetData(currentOffset + 0x01);
                     }
-                    
+
                     itemName = itemData.GetName(itemHexCode);
                     currentItem = new Item(itemHexCode, itemQty, itemName);
                     items.Add(currentItem);
-                    if(!qtys) {
+                    if (!qtys)
+                    {
                         currentOffset++;
                     }
-                    else 
+                    else
                     {
                         currentOffset += 0x02;
                     }
@@ -1021,7 +1074,7 @@ namespace PKLib {
 
             Badges badges = GetBadges();
 
-            sb.AppendLine(badges.getBadgesInfo(generation));
+            sb.AppendLine(badges.getBadgesInfo(_generation));
 
             sb.AppendLine("-----------");
             sb.AppendLine("Party Info:");
@@ -1054,24 +1107,68 @@ namespace PKLib {
 
         public ushort GetGender()
         {
-            if(crystal && GetData(genderAndShadowOffsetCrystal[0]) == 1)
+            if (_isCrystal && GetData(genderAndShadowOffsetCrystal[0]) == 1)
             {
                 return 1;
             }
-            
+
             return 0;
         }
 
-        private void UpdateChecksum(int checksum)
+        public void UpdateMainChecksum(int checksum)
+        {
+            try
+            {
+
+                if (_generation == 1)
+                {
+                    byte checksumByte = (byte)(checksum & 0xFF);
+                    PatchHexByte(checksumByte, offsets.checksumLocation);
+                    Console.WriteLine($"Checksum updated to {checksumByte:X2} at {offsets.checksumLocation:X}");
+                }
+                else
+                {
+                    // For Gen 2, write the high byte first, then the low byte (big endian)
+                    byte highByte = (byte)((checksum >> 8) & 0xFF);
+                    byte lowByte = (byte)(checksum & 0xFF);
+                    byte[] checksumBytes = new byte[] { highByte, lowByte };
+                    PatchHexBytes(checksumBytes, offsets.checksumLocation);
+                    Console.WriteLine($"Gen 2 Checksum updated to {highByte:X2}{lowByte:X2} at {offsets.checksumLocation:X}");
+                }
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+
+        public void UpdateMainChecksum(byte[] checksumBytes)
+        {
+            try
+            {
+                if (checksumBytes.Length != 2)
+                {
+                    throw new ArgumentException("Checksum byte array must be exactly 2 bytes long.");
+                }
+
+                PatchHexBytes(checksumBytes, offsets.checksumLocation);
+                Console.WriteLine($"Checksum updated to {BitConverter.ToString(checksumBytes).Replace("-", "")} at {offsets.checksumLocation:X}");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
+        public void UpdateChecksum(int checksum, int location)
         {
             try
             {
                 // Convert the hex string to bytes
                 byte highByte = (byte)((checksum >> 8) & 0xFF);
                 byte lowByte = (byte)(checksum & 0xFF);
-                byte[] checksumBytes = new byte[] { highByte, lowByte};
+                byte[] checksumBytes = new byte[] { highByte, lowByte };
 
-                PatchHexBytes(checksumBytes, offsets.checksumLocation);
+                PatchHexBytes(checksumBytes, location);
 
 
             }
@@ -1080,5 +1177,81 @@ namespace PKLib {
                 Console.WriteLine($"Error: {ex.Message}");
             }
         }
+
+        public string GetTrainerID()
+        {
+            byte[] trainerIdHex = GetData(offsets.trainerId, offsets.trainerId + 1);
+            ushort trainerId = (ushort)((trainerIdHex[0] << 8) | trainerIdHex[1]);
+            return trainerId.ToString("D5");
+        }
+
+        public void SetTrainerName(byte[] name)
+        {
+            if (name.Length <= 0 || name.Length > 8 || name[name.Length - 1] != 0x50)
+            {
+                Console.WriteLine("Bad trainer name. Aborting.");
+                return;
+            }
+
+            PatchHexBytes(name, offsets.trainerNameOffset);
+
+        }
+
+        public void SetRivalName(byte[] name)
+        {
+            if (name.Length <= 0 || name.Length > 8 || name[name.Length - 1] != 0x50)
+            {
+                Console.WriteLine("Bad rival name. Aborting.");
+                return;
+            }
+
+            PatchHexBytes(name, offsets.rivalNameOffset);
+        }
+
+        public void SetTrainerID(byte[] id)
+        {
+            if (id.Length != 2)
+            {
+                Console.WriteLine("Error: ID byte wrong size");
+                return;
+            }
+
+            PatchHexBytes(id, offsets.trainerId);
+        }
+
+        public void SetMoney(int money)
+        {
+            if (money < 0)
+            {
+                return;
+            }
+
+            if (money > 999999)
+            {
+                money = 999999;
+            }
+
+            byte[] encodedMoney;
+
+            if (_generation == 1)
+            {
+                encodedMoney = HexFunctions.ConvertIntToByteArray((uint)money);
+                foreach (byte current in encodedMoney)
+                {
+                    Console.Write($"{current} ");
+                }
+            }
+            else
+            {
+                encodedMoney = HexFunctions.IntToMoneyByte(money);
+            }
+
+            PatchHexBytes(encodedMoney, offsets.moneyOffset);
+        }
+
+        public ushort GetGeneration() {
+            return _generation;
     }
-}       
+
+    }
+}

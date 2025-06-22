@@ -96,6 +96,7 @@ internal class ItemData
             AddMapping(0x51, "Max Ether");
             AddMapping(0x52, "Elixer");
             AddMapping(0x53, "Max Elixer");
+            AddMapping(0x7F, "Glitch Item");
             
             AddMapping(0xC4, "HM01");
             AddMapping(0xC5, "HM02");

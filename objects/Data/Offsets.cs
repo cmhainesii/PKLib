@@ -1,45 +1,51 @@
 using System.Reflection.Metadata;
 
-internal class Offsets
+public class Offsets
 {
-    internal readonly ushort trainerNameOffset;
-    internal readonly ushort rivalNameOffset;
-    internal readonly ushort moneyOffset;
-    internal readonly ushort ownedSeenSize;
-    internal readonly int ownedOffset;
-    internal readonly int seenOffset;
-    internal readonly ushort partySizeOffset;
-    internal readonly int bagSizeOffset;
-    internal readonly int ballsPocketOffset;
-    internal readonly int keyItemsPocketOffset;
-    internal readonly int tmPocketOffset;
-    internal readonly int checksumStart;
-    internal readonly int checksumEnd;
-    internal readonly int checksumLocation;
-    internal readonly int partyNextPokemonOffset;
-    internal readonly ushort currentlySetBoxOffset;
-    internal readonly ushort currentBoxDataBegin;
-    internal readonly ushort nextBoxOffset;
-    internal readonly ushort nextBoxPokemonOffset;
-    internal readonly ushort boxLevelOffset;
-    internal readonly ushort boxIvOffset;
-    internal readonly ushort boxOtNameOffset;
-    internal readonly ushort boxNicknameOffset;
-    internal readonly ushort boxEvOffset;
-    internal readonly ushort badgesOffset;
-    internal readonly ushort trainerNameSize = 0x0B;
-    internal readonly int otIdOffset;
-    internal readonly ushort levelOffset;
-    internal readonly ushort attackDefenseOffset;
-    internal readonly ushort speedSpecialOffset;
-    internal readonly ushort genOneType1Offset;
-    internal readonly ushort statsOffset;
-    internal readonly ushort evOffset;
-    internal readonly ushort partyOtNameOffset;
-    internal readonly ushort partyNickNameOffset;
+    public readonly ushort trainerNameOffset;
+    public readonly ushort rivalNameOffset;
+    public readonly ushort moneyOffset;
+    public readonly ushort ownedSeenSize;
+    public readonly int ownedOffset;
+    public readonly int seenOffset;
+    public readonly ushort partySizeOffset;
+    public readonly int bagSizeOffset;
+    public readonly int ballsPocketOffset;
+    public readonly int keyItemsPocketOffset;
+    public readonly int tmPocketOffset;
+    public readonly int mainChecksumStart;
+    public readonly int mainChecksumEnd;
+    public readonly int checksumLocation;
+    public readonly int partyNextPokemonOffset;
+    public readonly ushort currentlySetBoxOffset;
+    public readonly ushort currentBoxDataBegin;
+    public readonly ushort nextBoxOffset;
+    public readonly ushort nextBoxPokemonOffset;
+    public readonly ushort boxLevelOffset;
+    public readonly ushort boxIvOffset;
+    public readonly ushort boxOtNameOffset;
+    public readonly ushort boxNicknameOffset;
+    public readonly ushort boxEvOffset;
+    public readonly ushort badgesOffset;
+    public readonly ushort trainerNameSize = 0x0B;
+    public readonly int otIdOffset;
+    public readonly ushort levelOffset;
+    public readonly ushort attackDefenseOffset;
+    public readonly ushort speedSpecialOffset;
+    public readonly ushort genOneType1Offset;
+    public readonly ushort statsOffset;
+    public readonly ushort evOffset;
+    public readonly ushort partyOtNameOffset;
+    public readonly ushort partyNickNameOffset;
+    public readonly ushort trainerId;
+    public readonly ushort bankTwoBoxesStart;
+    public readonly int bankTwoBoxesEnd = 0x5A4B;
+    public readonly ushort boxDataEnd;
+    public readonly ushort boxChecksumsStart;
     
-    public Offsets(int generation, bool cyrstal) {
-        if(generation == 1) 
+    public Offsets(int generation, bool cyrstal)
+    {
+        if (generation == 1)
         {
             trainerNameOffset = 0x2598;
             rivalNameOffset = 0x25F6;
@@ -52,8 +58,8 @@ internal class Offsets
             ballsPocketOffset = 0x00;
             keyItemsPocketOffset = 0x00;
             tmPocketOffset = 0x00;
-            checksumStart = 0x2598;
-            checksumEnd = 0x3522;
+            mainChecksumStart = 0x2598;
+            mainChecksumEnd = 0x3522;
             checksumLocation = 0x3523;
             partyNextPokemonOffset = 0x2C; // 44
             currentlySetBoxOffset = 0x284C;
@@ -75,8 +81,16 @@ internal class Offsets
             evOffset = 0x11;
             partyOtNameOffset = 0x110;
             partyNickNameOffset = 0x152;
+            trainerId = 0x2605;
+            bankTwoBoxesStart = 0x4000;
+            bankTwoBoxesEnd = 0x5A4B;
+            boxDataEnd = 0x461;
+            boxChecksumsStart = 0x5A4C;
+
+
         }
-        else { 
+        else
+        {
             // gsc all use the same offset here
             trainerNameOffset = 0x200B;
             rivalNameOffset = 0x2021;
@@ -97,25 +111,28 @@ internal class Offsets
             evOffset = 0x0B;
             partyOtNameOffset = 0x128;
             partyNickNameOffset = 0x16A;
-            if(cyrstal) { // crystal specific offsets
+            trainerId = 0x2009;
+            if (cyrstal)
+            { // crystal specific offsets
                 moneyOffset = 0x23DC;
                 ownedOffset = 0x2A27;
                 seenOffset = 0x2A47;
-                partySizeOffset = 0x2865;       
+                partySizeOffset = 0x2865;
                 bagSizeOffset = 0x2420;
                 ballsPocketOffset = 0x2465;
                 keyItemsPocketOffset = 0x244A;
                 tmPocketOffset = 0x23E7;
-                checksumStart = 0x2009;
-                checksumEnd = 0x2B82;
+                mainChecksumStart = 0x2009;
+                mainChecksumEnd = 0x2B82;
                 checksumLocation = 0x2D0D;
                 currentlySetBoxOffset = 0x2700;
                 currentBoxDataBegin = 0x2D10;
                 badgesOffset = 0x23E5;
-                
+
             }
-            else{ // gs specific offsets
-                moneyOffset = 0x23DB;   
+            else
+            { // gs specific offsets
+                moneyOffset = 0x23DB;
                 ownedOffset = 0x2A4C;
                 seenOffset = 0x2A6C;
                 partySizeOffset = 0x288A;
@@ -123,12 +140,12 @@ internal class Offsets
                 ballsPocketOffset = 0x2464;
                 keyItemsPocketOffset = 0x2449;
                 tmPocketOffset = 0x23E6;
-                checksumStart = 0x2009;
-                checksumEnd = 0x2D68;
+                mainChecksumStart = 0x2009;
+                mainChecksumEnd = 0x2D68;
                 checksumLocation = 0x2D69;
-                currentlySetBoxOffset = 0x2724;     
+                currentlySetBoxOffset = 0x2724;
                 currentBoxDataBegin = 0x2D6C;
-                badgesOffset = 0x23E4;      
+                badgesOffset = 0x23E4;
             }
         }
     }
