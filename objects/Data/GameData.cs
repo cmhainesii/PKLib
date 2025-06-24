@@ -525,6 +525,7 @@ namespace PKLib
             int currentPokemonOffset;
             int otNameOffset;
             int nickNameOffset;
+            int friendshipValue;
             string otName;
             string nickname;
             string[] types = new string[2];
@@ -620,16 +621,25 @@ namespace PKLib
                 hexIn = GetData(cursor++, cursor++);
                 int id = hexIn[0] << 8 | hexIn[1];
 
+                cursor = (ushort)(currentPokemonOffset + 0x1B);
+                if (_generation == 2)
+                {
+                    friendshipValue = GetData(cursor);
+                }
+                else
+                {
+                    friendshipValue = 0;
+                }
+
 
                 // Get OT name
-
-                otNameOffset = currentBoxOffset + offsets.boxOtNameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
+                    otNameOffset = currentBoxOffset + offsets.boxOtNameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                 otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, offsets.trainerNameSize);
 
                 nickNameOffset = currentBoxOffset + offsets.boxNicknameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                 nickname = TextEncoding.GetEncodedText(this, nickNameOffset, 0x50, offsets.trainerNameSize);
 
-                current = new Pokemon(name, level, ivs, new Stats(), evs, otName, nickname, types, id, 1);
+                current = new Pokemon(name, level, ivs, new Stats(), evs, friendshipValue, otName, nickname, types, id, 1);
                 boxPokemon.Add(current);
                 currentPokemonOffset += offsets.nextBoxPokemonOffset;
                 //otName.Clear();
@@ -654,6 +664,7 @@ namespace PKLib
             ushort defense;
             ushort speed;
             ushort special;
+            ushort friendshipValue;
             IV ivs;
             Stats stats;
             EVs evs;
@@ -750,6 +761,16 @@ namespace PKLib
                     hexIn = GetData(cursor++, cursor++);
                     int id = hexIn[0] << 8 | hexIn[1];
 
+                    cursor = (ushort)(currentPokemonOffset + 0x1B);
+                    if (_generation == 2)
+                    {
+                        friendshipValue = GetData(cursor);
+                    }
+                    else
+                    {
+                        friendshipValue = 0;
+                    }
+
 
                     otNameOffset = (offsets.partySizeOffset + offsets.partyOtNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                     otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, offsets.trainerNameSize);
@@ -757,7 +778,7 @@ namespace PKLib
                     nickOffset = (offsets.partySizeOffset + offsets.partyNickNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                     nickname = TextEncoding.GetEncodedText(this, nickOffset, 0x50, offsets.trainerNameSize);
 
-                    current = new Pokemon(speciesName, level, ivs, stats, evs, otName, nickname, types, id, _generation);
+                    current = new Pokemon(speciesName, level, ivs, stats, evs, friendshipValue, otName, nickname, types, id, _generation);
                     partyPokemon.Add(current);
                     currentPokemonOffset += (ushort)offsets.partyNextPokemonOffset; // increment by 44 bytes to get to next party pokemon
                 }
@@ -843,11 +864,11 @@ namespace PKLib
 
                     foreach (Pokemon current in pokemon)
                     {
-                        writer.WriteLine($"{current.speciesName},{current.level}," +
-                        $"{current.ivs.HP},{current.ivs.Attack},{current.ivs.Defense}," +
-                        $"{current.ivs.Special}, {current.ivs.Special},{current.ivs.Speed}," +
-                        $"{current.GetIvScore()}, {current.getIvPercentile() / 100},{current.otName}," +
-                        $"{current.otId:D5},{current.nickname}");
+                        writer.WriteLine($"{current._speciesName},{current._level}," +
+                        $"{current._ivs.HP},{current._ivs.Attack},{current._ivs.Defense}," +
+                        $"{current._ivs.Special}, {current._ivs.Special},{current._ivs.Speed}," +
+                        $"{current.GetIvScore()}, {current.getIvPercentile() / 100},{current._otName}," +
+                        $"{current._otId:D5},{current._nickname}");
                     }
                 }
                 else
@@ -855,21 +876,21 @@ namespace PKLib
                     writer.WriteLine("Species,Level,Held Item,HP,Attack,Defense,Special Attack,Special Defense,Speed,IV Score,Percentile,Original Trainer, OT Id,Nickname");
                     foreach (Pokemon current in pokemon)
                     {
-                        writer.Write($"{current.speciesName},{current.level},");
-                        if (current.heldItem == 0)
+                        writer.Write($"{current._speciesName},{current._level},");
+                        if (current._heldItem == 0)
                         {
                             writer.Write("None,");
                         }
                         else
                         {
-                            writer.Write($"{itemData.GetName(current.heldItem)},");
+                            writer.Write($"{itemData.GetName(current._heldItem)},");
                         }
-                        writer.Write($"{current.ivs.HP},{current.ivs.Attack},{current.ivs.Defense},");
-                        writer.Write($"{current.ivs.Special},{current.ivs.Special},");
-                        writer.Write($"{current.ivs.Speed},");
+                        writer.Write($"{current._ivs.HP},{current._ivs.Attack},{current._ivs.Defense},");
+                        writer.Write($"{current._ivs.Special},{current._ivs.Special},");
+                        writer.Write($"{current._ivs.Speed},");
                         writer.Write($"{current.GetIvScore()},{current.getIvPercentile() / 100},");
-                        writer.Write($"{current.otName},{current.otId:D5},");
-                        writer.WriteLine($"{current.nickname}");
+                        writer.Write($"{current._otName},{current._otId:D5},");
+                        writer.WriteLine($"{current._nickname}");
                     }
 
 
