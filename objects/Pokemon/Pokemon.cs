@@ -71,76 +71,92 @@ public class Pokemon
     {
         StringBuilder sb = new StringBuilder();
 
-        sb.AppendLine($"{"Name:",16}{_speciesName,14}");
-        sb.AppendLine($"{"Level:",16}{_level,14}");
+        // Header with Pokemon name
+        sb.AppendLine("════════════════════════════════════════");
+        sb.AppendLine($"║ {_speciesName.ToUpper(),-36} ║");
+        sb.AppendLine("════════════════════════════════════════");
+        sb.AppendLine();
+
+        // Basic Information Section
+        sb.AppendLine("┌─ BASIC INFORMATION ─────────────────┐");
+        sb.AppendLine($"│ {"Species:",14}{_speciesName,22} │");
+        sb.AppendLine($"│ {"Nickname:",14}{_nickname,22} │");
+        sb.AppendLine($"│ {"Level:",14}{_level,22} │");
+        sb.AppendLine($"│ {"Type:",14}{(_types[1] != "None" ? $"{_types[0]}/{_types[1]}" : _types[0]),22} │");
         
         // Print held item info if generation 2
         if (_generation != 1)
         {
             ItemData itemData = new ItemData(2);
-            if (_heldItem != 0)
-            {
-                sb.AppendLine($"{"Held Item:",16}{itemData.GetName(_heldItem),14}");
-            }
-            else
-            {
-                sb.AppendLine($"{"Held Item:",16}{"None",14}");
-            }
+            string heldItemName = _heldItem != 0 ? itemData.GetName(_heldItem) : "None";
+            sb.AppendLine($"│ {"Held Item:",14}{heldItemName,22} │");
         }
-
-        sb.AppendLine($"{"Type 1:",16}{_types[0],14}");
-        sb.AppendLine($"{"Type 2:",16}{_types[1],14}");
-        sb.AppendLine();
-        sb.AppendLine($"{"",16}{"IV Data",7}{"",13}");
-        sb.AppendLine($"{"HP:",16}{_ivs.HP,13}{(_ivs.HP == 15 ? "*" : "")}");
-        sb.AppendLine($"{"Attack:",16}{_ivs.Attack,13}{(_ivs.Attack == 15 ? "*" : "")}");
-        sb.AppendLine($"{"Defense:",16}{_ivs.Defense,13}{(_ivs.Defense == 15 ? "*" : "")}");
-        sb.AppendLine($"{"Special:",16}{_ivs.Special,13}{(_ivs.Special == 15 ? "*" : "")}");
-        sb.AppendLine($"{"Speed:",16}{_ivs.Speed,13}{(_ivs.Speed == 15 ? "*" : "")}");
-        sb.AppendLine($"{"Score:",16}{GetIvScore(),14}");
-        sb.AppendLine($"{"Percentile:",16}{getIvPercentile(),13:F2}{"%",1}");
         
+        sb.AppendLine("└─────────────────────────────────────┘");
+        sb.AppendLine();
+
+        // Individual Values (IVs) Section
+        sb.AppendLine("┌─ INDIVIDUAL VALUES (IVs) ───────────┐");
+        sb.AppendLine($"│ {"HP:",14}{_ivs.HP,3} {(_ivs.HP == 15 ? "★" : " "),1}  {GetIvBar(_ivs.HP),10} │");
+        sb.AppendLine($"│ {"Attack:",14}{_ivs.Attack,3} {(_ivs.Attack == 15 ? "★" : " "),1}  {GetIvBar(_ivs.Attack),10} │");
+        sb.AppendLine($"│ {"Defense:",14}{_ivs.Defense,3} {(_ivs.Defense == 15 ? "★" : " "),1}  {GetIvBar(_ivs.Defense),10} │");
+        sb.AppendLine($"│ {"Special:",14}{_ivs.Special,3} {(_ivs.Special == 15 ? "★" : " "),1}  {GetIvBar(_ivs.Special),10} │");
+        sb.AppendLine($"│ {"Speed:",14}{_ivs.Speed,3} {(_ivs.Speed == 15 ? "★" : " "),1}  {GetIvBar(_ivs.Speed),10} │");
+        sb.AppendLine($"│{"",-37}│");
+        sb.AppendLine($"│ {"Total Score:",14}{GetIvScore(),3} / 60{"",-15}│");
+        sb.AppendLine($"│ {"Percentile:",14}{getIvPercentile():F1}%{"",-17}│");
+        sb.AppendLine("└─────────────────────────────────────┘");
+        sb.AppendLine();
+
+        // Current Stats Section (if available)
         if(GetStatScore() > 0)
         {
+            sb.AppendLine("┌─ CURRENT STATS ─────────────────────┐");
+            sb.AppendLine($"│ {"HP:",14}{_stats.HP,22} │");
+            sb.AppendLine($"│ {"Attack:",14}{_stats.Attack,22} │");
+            sb.AppendLine($"│ {"Defense:",14}{_stats.Defense,22} │");
+            sb.AppendLine($"│ {"Sp. Attack:",14}{_stats.SpecialAttack,22} │");
+            sb.AppendLine($"│ {"Sp. Defense:",14}{_stats.SpecialDefense,22} │");
+            sb.AppendLine($"│ {"Speed:",14}{_stats.Speed,22} │");
+            sb.AppendLine($"│ {"",-14}{"",-22} │");
+            sb.AppendLine($"│ {"Total:",14}{GetStatScore(),22} │");
+            sb.AppendLine("└─────────────────────────────────────┘");
             sb.AppendLine();
-            sb.AppendLine($"{"",16}{"Stats",5}{"",12}");
-            sb.AppendLine($"{"HP:",16}{_stats.HP,14}");
-            sb.AppendLine($"{"Attack:",16}{_stats.Attack,14}");
-            sb.AppendLine($"{"Defense:",16}{_stats.Defense,14}");
-            sb.AppendLine($"{"Special Attack:",16}{_stats.SpecialAttack,14}");
-            sb.AppendLine($"{"Special Defense:",16}{_stats.SpecialDefense,14}");
-            sb.AppendLine($"{"Speed:",16}{_stats.Speed,14}");
-            sb.AppendLine($"{"Score:",16}{GetStatScore(),14}");
         }
 
+        // Effort Values Section
         if(GetEvScore() > 0) 
         {
-            sb.AppendLine();
-            sb.AppendLine($"{"",16}{"EV Data",7}{"",15}");
-            sb.AppendLine($"{"HP:",16}{_evs.HP,14:N0}");
-            sb.AppendLine($"{"Attack:",16}{_evs.Attack,14:N0}");
-            sb.AppendLine($"{"Defense:",16}{_evs.Defense,14:N0}");
-            sb.AppendLine($"{"Special:",16}{_evs.Special,14:N0}");
-            sb.AppendLine($"{"Speed:",16}{_evs.Speed,14:N0}");
-            sb.AppendLine($"{"Score:",16}{GetEvScore(),14:N0}");
+            sb.AppendLine("┌─ EFFORT VALUES (EVs) ───────────────┐");
+            sb.AppendLine($"│ {"HP:",14}{_evs.HP,22:N0} │");
+            sb.AppendLine($"│ {"Attack:",14}{_evs.Attack,22:N0} │");
+            sb.AppendLine($"│ {"Defense:",14}{_evs.Defense,22:N0} │");
+            sb.AppendLine($"│ {"Special:",14}{_evs.Special,22:N0} │");
+            sb.AppendLine($"│ {"Speed:",14}{_evs.Speed,22:N0} │");
+            sb.AppendLine($"│ {"",-14}{"",-22} │");
+            sb.AppendLine($"│ {"Total:",14}{GetEvScore(),22:N0} │");
+            sb.AppendLine("└─────────────────────────────────────┘");
             sb.AppendLine();
         }
         else
         {
-            sb.AppendLine();
-            sb.AppendLine($"{"All Evs:",16}{"0",14}");
+            sb.AppendLine("┌─ EFFORT VALUES (EVs) ───────────────┐");
+            sb.AppendLine($"│ {"All EVs:",14}{"0",22} │");
+            sb.AppendLine("└─────────────────────────────────────┘");
             sb.AppendLine();
         }
 
-        sb.AppendLine($"{"OT Name:",16}{_otName,14}");
-        sb.AppendLine($"{"OT ID:",16}{_otId,14:D5}");
-        sb.AppendLine($"{"Nickname:",16}{_nickname,14}");
-
+        // Trainer Information Section
+        sb.AppendLine("┌─ TRAINER INFORMATION ───────────────┐");
+        sb.AppendLine($"│ {"OT Name:",14}{_otName,22} │");
+        sb.AppendLine($"│ {"OT ID:",14}{_otId:D5}{"",-17} │");
+        
         if (_friendship != 0)
         {
-            sb.AppendLine($"{"Friendship:",16}{_friendship,14}");
+            sb.AppendLine($"│ {"Friendship:",14}{_friendship,22} │");
         }
-
+        
+        sb.AppendLine("└─────────────────────────────────────┘");
 
         return sb.ToString();
     }
@@ -168,6 +184,14 @@ public class Pokemon
     public double getIvPercentile()
     {
         return Math.Round(GetIvScore() / 60.0 * 100.0, 2);
+    }
+
+    private string GetIvBar(ushort ivValue)
+    {
+        // Create a visual bar representation of IV value (0-15)
+        int barLength = (int)Math.Round((double)ivValue / 15 * 10);
+        string bar = new string('█', barLength) + new string('░', 10 - barLength);
+        return bar;
     }
 
 
