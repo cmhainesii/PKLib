@@ -14,7 +14,6 @@ public static class PokemonUtil
         while (money > 65535) {
             money -= 65535;
         }
-        Console.WriteLine($"Money: {money}");
 
         moneyValue = (money % 256) + (money / 256);
 
@@ -24,9 +23,6 @@ public static class PokemonUtil
         }
         idValue = (id % 256) + (id / 256);
  
-        Console.WriteLine($"MV: {moneyValue}");
-        Console.WriteLine($"NV: {nameValue}");
-        Console.WriteLine($"IV: {idValue}");
 
         return (nameValue + moneyValue + idValue).ToString("D5");
         

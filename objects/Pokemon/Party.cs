@@ -1,12 +1,21 @@
 using System.Text;
 using PKLib;
-public class Party
+
+namespace PKLib
 {
-    private List<Pokemon> pokemonList;
+    public class Party
+    {
+    private List<Pokemon> _pokemonList;
 
     public Party(GameData gameData)
     {
-        pokemonList = gameData.GetPartyPokemon();        
+        _pokemonList = gameData.GetPartyPokemon();
+    }
+
+    // Constructor overload for creating Party with a specific Pokemon list
+    public Party(List<Pokemon> pokemonList)
+    {
+        _pokemonList = new List<Pokemon>(pokemonList); // Create a defensive copy
     }
 
     public string GetInfo()
@@ -17,19 +26,25 @@ public class Party
         sb.AppendLine("Party Information:");
         sb.AppendLine();
         sb.AppendLine(notFancyLine);
-        
+
 
         ushort count = 0;
 
-        foreach(Pokemon current in pokemonList)
+        foreach (Pokemon current in _pokemonList)
         {
             sb.AppendLine($"Party Pokemon #{++count}");
             sb.AppendLine();
-            sb.AppendLine(current.GetInfo());   
+            sb.AppendLine(current.GetInfo());
             sb.AppendLine(notFancyLine);
         }
 
         return sb.ToString();
 
     }
+
+    public IReadOnlyList<Pokemon> GetParty()
+    {
+        return _pokemonList.AsReadOnly();
+    }
+}
 }

@@ -27,10 +27,11 @@ namespace PKLib
         public string _fileName { get; set; }
         public ushort _generation { get; set; }
         public bool _isCrystal { get; set; }
-        private Party partyPokemon;
+        public Party partyPokemon { get; set;  }
         private PokemonPC pcPokemon;
         public Bag items { get; set; }
         public ItemBox boxItems { get; }
+        public string _timeResetPassword { get; set; }
 
         public Offsets offsets;
         internal ItemData itemData;
@@ -45,6 +46,13 @@ namespace PKLib
             offsets = new Offsets(this._generation, this._isCrystal);
             itemData = new ItemData(_generation);
             pokemonData = new PokemonData(_generation);
+            _timeResetPassword = string.Empty;
+
+            if (_generation == 2)
+            {
+                _timeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
+            }
+            
 
 
 
@@ -75,6 +83,12 @@ namespace PKLib
             offsets = new Offsets(this._generation, this._isCrystal);
             itemData = new ItemData(_generation);
             pokemonData = new PokemonData(_generation);
+            _timeResetPassword = string.Empty;
+
+            if (_generation == 2)
+            {
+                _timeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
+            }
 
 
 
@@ -651,7 +665,7 @@ namespace PKLib
 
         
 
-        public List<Pokemon> GetPartyPokemon(bool sortByScore = false)
+        internal List<Pokemon> GetPartyPokemon(bool sortByScore = false)
         {
             List<Pokemon> partyPokemon = new List<Pokemon>();
             Pokemon current;
@@ -1127,11 +1141,6 @@ namespace PKLib
 
 
             return sb.ToString();
-        }
-
-        public Party GetParty()
-        {
-            return partyPokemon;
         }
 
         public ushort GetGender()
