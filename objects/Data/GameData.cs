@@ -24,53 +24,66 @@ namespace PKLib
 
         // Fields
         private byte[] _fileData;
-        public string _fileName { get; set; }
-        public ushort _generation { get; set; }
-        public bool _isCrystal { get; set; }
-        public Party partyPokemon { get; set;  }
+        public string FileName { get; set; }
+        public ushort Generation { get; set; }
+        public bool IsCrystal { get; set; }
+        public Party PartyPokemon { get; set;  }
         private PokemonPC pcPokemon;
-        public Bag items { get; set; }
-        public ItemBox boxItems { get; }
-        public string _timeResetPassword { get; set; }
+        public Bag Items { get; set; }
+        public ItemBox BoxItems { get; }
+        public string TimeResetPassword { get; set; }
+        public Trainer Trainer { get; set; }
 
         public Offsets offsets;
         internal ItemData itemData;
         internal PokemonData pokemonData;
 
+
+
         // Constructor
         public GameData(string fileName)
         {
             _fileData = File.ReadAllBytes(fileName);
-            this._fileName = fileName;
-            this._generation = determineGeneration();
-            offsets = new Offsets(this._generation, this._isCrystal);
-            itemData = new ItemData(_generation);
-            pokemonData = new PokemonData(_generation);
-            _timeResetPassword = string.Empty;
+            this.FileName = fileName;
+            this.Generation = determineGeneration();
+            offsets = new Offsets(this.Generation, this.IsCrystal);
+            itemData = new ItemData(Generation);
+            pokemonData = new PokemonData(Generation);
+            TimeResetPassword = string.Empty;
 
-            if (_generation == 2)
+            if (Generation == 2)
             {
-                _timeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
+                TimeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
             }
-            
 
 
 
-            partyPokemon = new Party(this);
+
+            PartyPokemon = new Party(this);
             pcPokemon = new PokemonPC(this);
-            if (_generation == 1)
+            if (Generation == 1)
             {
-                items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
+                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
             }
             else
             {
-                items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
+                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
                 GetBagItems(offsets.ballsPocketOffset, 12),
                 GetBagItems(offsets.keyItemsPocketOffset, 26, false),
                 GetTMPocketItems(offsets.tmPocketOffset));
             }
 
-            this.boxItems = new ItemBox(GetBoxItems());
+            BoxItems = new ItemBox(GetBoxItems());
+
+            Trainer = new Trainer
+            {
+                Name = GetTrainerName(),
+                Id = GetTrainerID(),
+                RivalName = GetRivalName(),
+                NumberBadges = GetBadges().GetNumBadges(),
+                Money = GetMoney()
+
+            };
 
 
         }
@@ -78,35 +91,35 @@ namespace PKLib
         public GameData(byte[] fileData)
         {
             this._fileData = fileData;
-            this._fileName = "save.sav";
-            this._generation = determineGeneration();
-            offsets = new Offsets(this._generation, this._isCrystal);
-            itemData = new ItemData(_generation);
-            pokemonData = new PokemonData(_generation);
-            _timeResetPassword = string.Empty;
+            this.FileName = "save.sav";
+            this.Generation = determineGeneration();
+            offsets = new Offsets(this.Generation, this.IsCrystal);
+            itemData = new ItemData(Generation);
+            pokemonData = new PokemonData(Generation);
+            TimeResetPassword = string.Empty;
 
-            if (_generation == 2)
+            if (Generation == 2)
             {
-                _timeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
+                TimeResetPassword = PokemonUtil.GCSTimeResetPassword(GetTrainerName(), int.Parse(GetTrainerID()), (int)(GetMoney()));
             }
 
 
 
-            partyPokemon = new Party(this);
+            PartyPokemon = new Party(this);
             pcPokemon = new PokemonPC(this);
-            if (_generation == 1)
+            if (Generation == 1)
             {
-                items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
+                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
             }
             else
             {
-                items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
+                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
                 GetBagItems(offsets.ballsPocketOffset, 12),
                 GetBagItems(offsets.keyItemsPocketOffset, 26, false),
                 GetTMPocketItems(offsets.tmPocketOffset));
             }
 
-            this.boxItems = new ItemBox(GetBoxItems());
+            this.BoxItems = new ItemBox(GetBoxItems());
 
 
         }
@@ -132,7 +145,7 @@ namespace PKLib
 
         internal void SetGender(byte gender)
         {
-            if (!_isCrystal)
+            if (!IsCrystal)
             {
                 Console.WriteLine("Error, changing gender is only supported for Pokemon Crystal saves. Aborting.");
                 return;
@@ -154,49 +167,49 @@ namespace PKLib
             valid = ValidateList(save, 0x2F2C, 6) && ValidateList(save, 0x30C0, 20);
             if (valid)
             {
-                this._generation = (ushort)1;
-                this._isCrystal = false;
-                return this._generation;
+                this.Generation = (ushort)1;
+                this.IsCrystal = false;
+                return this.Generation;
             }
 
 
             valid = ValidateList(save, 0x2ED5, 6) && ValidateList(save, 0x302D, 30);
             if (valid)
             {
-                this._generation = (ushort)1;
-                this._isCrystal = false;
-                return this._generation;
+                this.Generation = (ushort)1;
+                this.IsCrystal = false;
+                return this.Generation;
             }
 
             valid = ValidateList(save, 0x288A, 6) && ValidateList(save, 0x2D6C, 20);
             if (valid)
             {
-                this._generation = (ushort)2;
-                this._isCrystal = false;
-                return this._generation;
+                this.Generation = (ushort)2;
+                this.IsCrystal = false;
+                return this.Generation;
             }
 
             valid = ValidateList(save, 0x2865, 6) && ValidateList(save, 0x2D10, 20);
             if (valid)
             {
-                this._generation = (ushort)2;
-                this._isCrystal = true;
-                return this._generation;
+                this.Generation = (ushort)2;
+                this.IsCrystal = true;
+                return this.Generation;
             }
 
             valid = ValidateList(save, 0x283E, 6) && ValidateList(save, 0x2D10, 30);
             if (valid)
             {
-                this._generation = (ushort)2;
-                this._isCrystal = false;
-                return this._generation;
+                this.Generation = (ushort)2;
+                this.IsCrystal = false;
+                return this.Generation;
             }
             valid = ValidateList(save, 0x281A, 6) && ValidateList(save, 0x2D10, 30);
             if (valid)
             {
-                this._generation = (ushort)2;
-                this._isCrystal = true;
-                return this._generation;
+                this.Generation = (ushort)2;
+                this.IsCrystal = true;
+                return this.Generation;
             }
 
             return 0;
@@ -221,7 +234,7 @@ namespace PKLib
 
         public void UpdateBoxChecksums()
         {
-            if (_generation != 1)
+            if (Generation != 1)
             {
                 return;
             }
@@ -267,7 +280,7 @@ namespace PKLib
                 sum += _fileData[i];
             }
 
-            if (_generation == 1)
+            if (Generation == 1)
             {
                 return ~sum & 0xFF;
             }
@@ -310,7 +323,7 @@ namespace PKLib
 
         public void EmptyBag()
         {
-            items.ClearBag();
+            Items.ClearBag();
 
             byte[] bagClear = { 0x00, 0xFF };
             PatchHexBytes(bagClear, offsets.bagSizeOffset);
@@ -324,7 +337,7 @@ namespace PKLib
                 offsets.mainChecksumEnd
             ));
 
-            File.WriteAllBytes(_fileName, _fileData);
+            File.WriteAllBytes(FileName, _fileData);
         }
 
         public string GetTrainerName()
@@ -408,7 +421,7 @@ namespace PKLib
         {
             byte[] money = GetData(offsets.moneyOffset, offsets.moneyOffset + 2);
 
-            if (_generation == 1)
+            if (Generation == 1)
             {
                 uint result = (uint)(DecodeBCD(money[0]) * 10000 +
                             DecodeBCD(money[1]) * 100 +
@@ -478,7 +491,7 @@ namespace PKLib
             }
             else
             {
-                if (_generation == 1)
+                if (Generation == 1)
                 {
                     if (boxNum < 7)
                     {
@@ -552,7 +565,7 @@ namespace PKLib
             }
             else
             {
-                if (_generation == 1)
+                if (Generation == 1)
                 {
                     if (boxNumber < 7)
                     {
@@ -592,7 +605,7 @@ namespace PKLib
                 speed = (ushort)(ss >> 4);
                 special = (ushort)(ss & 0x0F);
                 hp = CalculateHpIv(attack, defense, special, speed);
-                if (_generation == 1)
+                if (Generation == 1)
                 {
                     types[0] = TypeData.GetName(GetData(currentPokemonOffset + 0x05));
                     types[1] = TypeData.GetName(GetData(currentPokemonOffset + 0x06));
@@ -636,7 +649,7 @@ namespace PKLib
                 int id = hexIn[0] << 8 | hexIn[1];
 
                 cursor = (ushort)(currentPokemonOffset + 0x1B);
-                if (_generation == 2)
+                if (Generation == 2)
                 {
                     friendshipValue = GetData(cursor);
                 }
@@ -706,7 +719,7 @@ namespace PKLib
                     speed = (ushort)(ss >> 4);
                     special = (ushort)(ss & 0x0F);
 
-                    if (_generation == 1)
+                    if (Generation == 1)
                     {
                         types[0] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset));
                         types[1] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset + 1));
@@ -727,7 +740,7 @@ namespace PKLib
                     };
 
                     ushort cursor = (ushort)(currentPokemonOffset + offsets.statsOffset);
-                    if (_generation == 1)
+                    if (Generation == 1)
                     {
                         stats = new Stats
                         {
@@ -776,7 +789,7 @@ namespace PKLib
                     int id = hexIn[0] << 8 | hexIn[1];
 
                     cursor = (ushort)(currentPokemonOffset + 0x1B);
-                    if (_generation == 2)
+                    if (Generation == 2)
                     {
                         friendshipValue = GetData(cursor);
                     }
@@ -792,7 +805,7 @@ namespace PKLib
                     nickOffset = (offsets.partySizeOffset + offsets.partyNickNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
                     nickname = TextEncoding.GetEncodedText(this, nickOffset, 0x50, offsets.trainerNameSize);
 
-                    current = new Pokemon(speciesName, level, ivs, stats, evs, friendshipValue, otName, nickname, types, id, _generation);
+                    current = new Pokemon(speciesName, level, ivs, stats, evs, friendshipValue, otName, nickname, types, id, Generation);
                     partyPokemon.Add(current);
                     currentPokemonOffset += (ushort)offsets.partyNextPokemonOffset; // increment by 44 bytes to get to next party pokemon
                 }
@@ -871,7 +884,7 @@ namespace PKLib
         {
             using (StreamWriter writer = new StreamWriter(filename))
             {
-                if (_generation == 1)
+                if (Generation == 1)
                 {
                     // Write the header row
                     writer.WriteLine("Species,Level,HP,Attack,Defense,Special Attack,Special Defense,Speed,IV Score,Percentile,Original Trainer,OT Id,Nickname");
@@ -942,7 +955,7 @@ namespace PKLib
         {
             List<Item> items = new List<Item>();
 
-            if (_generation == 2)
+            if (Generation == 2)
             {
                 return items;
             }
@@ -1117,14 +1130,14 @@ namespace PKLib
 
             Badges badges = GetBadges();
 
-            sb.AppendLine(badges.getBadgesInfo(_generation));
+            sb.AppendLine(badges.getBadgesInfo(Generation));
 
             sb.AppendLine("-----------");
             sb.AppendLine("Party Info:");
             sb.AppendLine("___________");
             sb.AppendLine();
 
-            sb.AppendLine(partyPokemon.GetInfo());
+            sb.AppendLine(PartyPokemon.GetInfo());
 
             sb.AppendLine();
             sb.AppendLine(pcPokemon.GetPcPokemonInfo());
@@ -1137,7 +1150,7 @@ namespace PKLib
             // sb.AppendLine();
 
 
-            sb.AppendLine(items.GetInfo());
+            sb.AppendLine(Items.GetInfo());
 
 
             return sb.ToString();
@@ -1145,7 +1158,7 @@ namespace PKLib
 
         public ushort GetGender()
         {
-            if (_isCrystal && GetData(genderAndShadowOffsetCrystal[0]) == 1)
+            if (IsCrystal && GetData(genderAndShadowOffsetCrystal[0]) == 1)
             {
                 return 1;
             }
@@ -1158,7 +1171,7 @@ namespace PKLib
             try
             {
 
-                if (_generation == 1)
+                if (Generation == 1)
                 {
                     byte checksumByte = (byte)(checksum & 0xFF);
                     PatchHexByte(checksumByte, offsets.checksumLocation);
@@ -1271,7 +1284,7 @@ namespace PKLib
 
             byte[] encodedMoney;
 
-            if (_generation == 1)
+            if (Generation == 1)
             {
                 encodedMoney = HexFunctions.ConvertIntToByteArray((uint)money);
                 foreach (byte current in encodedMoney)
@@ -1288,7 +1301,7 @@ namespace PKLib
         }
 
         public ushort GetGeneration() {
-            return _generation;
+            return Generation;
     }
 
     }

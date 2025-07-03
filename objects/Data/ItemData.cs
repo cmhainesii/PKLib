@@ -299,6 +299,7 @@ internal class ItemData
             AddMapping(0x7C, "Revival Herb");
             AddMapping(0x7D, "Hard Stone");
             AddMapping(0x7E, "Lucky Egg");
+            AddMapping(0x7F, "Glitch Item");
             
             AddMapping(0x80, "Machine Part");
             AddMapping(0x81, "Egg Ticket");
