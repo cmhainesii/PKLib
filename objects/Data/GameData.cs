@@ -10,16 +10,15 @@ namespace PKLib
     public class GameData
     {
         // Constants - Hex Data Offset Locations
-        internal const ushort BOX_SIZE_TO_FIRST_POKEMON_OFFSET = 0x16;
-        internal const ushort BOX_ONE_BEGIN = 0x4000;
-        internal const ushort BOX_SEVEN_BEGIN = 0x6000;
+        private const ushort BOX_SIZE_TO_FIRST_POKEMON_OFFSET = 0x16;
+        private const ushort BOX_ONE_BEGIN = 0x4000;
+        private const ushort BOX_SEVEN_BEGIN = 0x6000;
 
-        internal const ushort OT_NICK_NEXT_NAME_OFFSET = 0x0B;
-        public const ushort PARTY_SIZE_TO_FIRST_POKEMON_OFFSET = 0x08;
-        private const ushort partyOtIdOffset = 0x0C;
+        private const ushort OT_NICK_NEXT_NAME_OFFSET = 0x0B;
+        private const ushort PARTY_SIZE_TO_FIRST_POKEMON_OFFSET = 0x08;
         private readonly static ushort[] genderAndShadowOffsetCrystal = { 0x3E3D, 0x206A };
-        internal const int boxItemsSizeOffset = 0x27E6;
-        internal const int boxFirstItemOffset = boxItemsSizeOffset + 0x01;
+        private const int boxItemsSizeOffset = 0x27E6;
+        private const int boxFirstItemOffset = boxItemsSizeOffset + 0x01;
 
 
         // Fields
@@ -34,7 +33,7 @@ namespace PKLib
         public string TimeResetPassword { get; set; }
         public Trainer Trainer { get; set; }
 
-        public Offsets offsets;
+        private readonly Offsets _offsets;
         internal ItemData itemData;
         internal PokemonData pokemonData;
 
@@ -46,7 +45,7 @@ namespace PKLib
             _fileData = File.ReadAllBytes(fileName);
             this.FileName = fileName;
             this.Generation = determineGeneration();
-            offsets = new Offsets(this.Generation, this.IsCrystal);
+            _offsets = Offsets.ForGeneration(Generation, IsCrystal);
             itemData = new ItemData(Generation);
             pokemonData = new PokemonData(Generation);
             TimeResetPassword = string.Empty;
@@ -63,14 +62,14 @@ namespace PKLib
             PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
-                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
+                Items = new Bag(GetBagItems(_offsets.BagSize, 20));
             }
             else
             {
-                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
-                GetBagItems(offsets.ballsPocketOffset, 12),
-                GetBagItems(offsets.keyItemsPocketOffset, 26, false),
-                GetTMPocketItems(offsets.tmPocketOffset));
+                Items = new Bag(GetBagItems(_offsets.BagSize, 20),
+                GetBagItems(_offsets.BallsPocketOffset, 12),
+                GetBagItems(_offsets.KeyItemsPocketOffset, 26, false),
+                GetTMPocketItems(_offsets.TmPocketOffset));
             }
 
             BoxItems = new ItemBox(GetBoxItems());
@@ -93,7 +92,7 @@ namespace PKLib
             this._fileData = fileData;
             this.FileName = "save.sav";
             this.Generation = determineGeneration();
-            offsets = new Offsets(this.Generation, this.IsCrystal);
+            _offsets = Offsets.ForGeneration(Generation, IsCrystal);
             itemData = new ItemData(Generation);
             pokemonData = new PokemonData(Generation);
             TimeResetPassword = string.Empty;
@@ -109,14 +108,14 @@ namespace PKLib
             PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
-                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
+                Items = new Bag(GetBagItems(_offsets.BagSize, 20));
             }
             else
             {
-                Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20),
-                GetBagItems(offsets.ballsPocketOffset, 12),
-                GetBagItems(offsets.keyItemsPocketOffset, 26, false),
-                GetTMPocketItems(offsets.tmPocketOffset));
+                Items = new Bag(GetBagItems(_offsets.BagSize, 20),
+                GetBagItems(_offsets.BallsPocketOffset, 12),
+                GetBagItems(_offsets.KeyItemsPocketOffset, 26, false),
+                GetTMPocketItems(_offsets.TmPocketOffset));
             }
 
             BoxItems = new ItemBox(GetBoxItems());
@@ -251,14 +250,14 @@ namespace PKLib
 
             byte[] checksumsBank1 = new byte[6];
             // int[] checksumsBank2 = new int[6];
-            int currentBoxStart = offsets.bankTwoBoxesStart;
+            int currentBoxStart = _offsets.BankTwoBoxesStart;
 
             for (int i = 0; i < 6; ++i)
             {
-                int checksum = CalculateChecksum(currentBoxStart, currentBoxStart + offsets.boxDataEnd);
+                int checksum = CalculateChecksum(currentBoxStart, currentBoxStart + _offsets.BoxDataEnd);
                 byte lowByte = (byte)(checksum & 0xFF);
                 checksumsBank1[i] = lowByte;
-                currentBoxStart += offsets.nextBoxOffset;
+                currentBoxStart += _offsets.NextBox;
             }
 
             for (int i = 1; i <= 6; ++i)
@@ -266,12 +265,12 @@ namespace PKLib
                 Console.WriteLine($"Box {i} Checksum: {checksumsBank1[i - 1]:X2}");
             }
 
-            PatchHexBytes(checksumsBank1, offsets.boxChecksumsStart + 1);
+            PatchHexBytes(checksumsBank1, _offsets.BoxChecksumsStart + 1);
 
-            int bankTwoWholeChecksum = CalculateChecksum(offsets.bankTwoBoxesStart, offsets.bankTwoBoxesEnd);
+            int bankTwoWholeChecksum = CalculateChecksum(_offsets.BankTwoBoxesStart, _offsets.BankTwoBoxesEnd);
             byte bankTwoLowByte = (byte)(bankTwoWholeChecksum & 0xFF);
             Console.WriteLine($"Bank 2 Checksum: {bankTwoLowByte:X2}");
-            PatchHexByte(bankTwoLowByte, offsets.boxChecksumsStart);
+            PatchHexByte(bankTwoLowByte, _offsets.BoxChecksumsStart);
 
 
 
@@ -336,15 +335,15 @@ namespace PKLib
             Items.ClearBag();
 
             byte[] bagClear = { 0x00, 0xFF };
-            PatchHexBytes(bagClear, offsets.bagSizeOffset);
+            PatchHexBytes(bagClear, _offsets.BagSize);
         }
 
         public void ToFile()
         {
             UpdateBoxChecksums();
             UpdateMainChecksum(CalculateChecksum(
-                offsets.mainChecksumStart,
-                offsets.mainChecksumEnd
+                _offsets.MainChecksumRegionStart,
+                _offsets.MainChecksumRegionEnd
             ));
 
             File.WriteAllBytes(FileName, _fileData);
@@ -352,12 +351,12 @@ namespace PKLib
 
         public string GetTrainerName()
         {
-            return TextEncoding.GetEncodedText(this, offsets.trainerNameOffset, 0x50, offsets.trainerNameSize);
+            return TextEncoding.GetEncodedText(this, _offsets.TrainerName, 0x50, _offsets.TrainerNameSize);
         }
 
         public string GetRivalName()
         {
-            return TextEncoding.GetEncodedText(this, offsets.rivalNameOffset, 0x50, offsets.trainerNameSize);
+            return TextEncoding.GetEncodedText(this, _offsets.RivalName, 0x50, _offsets.TrainerNameSize);
         }
 
         public void ChangeRivalName(string name)
@@ -369,12 +368,12 @@ namespace PKLib
             }
 
             byte[] encodedName = EncodeText(name, 0x50);
-            if (encodedName.Length > offsets.trainerNameSize)
+            if (encodedName.Length > _offsets.TrainerNameSize)
             {
                 Console.WriteLine("Error: Encoded name text too long.");
                 return;
             }
-            PatchHexBytes(encodedName, offsets.rivalNameOffset);
+            PatchHexBytes(encodedName, _offsets.RivalName);
         }
 
         public void ChangePartyPokemonOtId(int newID)
@@ -390,7 +389,7 @@ namespace PKLib
 
             int partyOffset = 0x2F2C;
             int firstPokemon = partyOffset + 0x08;
-            int firstPokemonOtId = firstPokemon + partyOtIdOffset;
+            int firstPokemonOtId = firstPokemon + _offsets.PartyOtId;
 
             Console.WriteLine("Total Pokemon in Party: " + _fileData[partyOffset]);
             int currentOffset = firstPokemonOtId;
@@ -405,7 +404,7 @@ namespace PKLib
         {
             bool[] values = new bool[8];
 
-            byte data = GetSaveData()[offsets.badgesOffset];
+            byte data = GetSaveData()[_offsets.Badges];
 
             for (byte index = 0; index < 8; ++index)
             {
@@ -429,7 +428,7 @@ namespace PKLib
         // Returns 32bit integer representing how much money the player has in decimal.
         public uint GetMoney()
         {
-            byte[] money = GetData(offsets.moneyOffset, offsets.moneyOffset + 2);
+            byte[] money = GetData(_offsets.Money, _offsets.Money + 2);
 
             if (Generation == 1)
             {
@@ -451,7 +450,7 @@ namespace PKLib
         public ushort GetNumberOwned()
         {
             ushort sum = 0;
-            for (int i = offsets.ownedOffset; i < offsets.ownedOffset + offsets.ownedSeenSize; ++i)
+            for (int i = _offsets.Owned; i < _offsets.Owned + _offsets.OwnedSeenSize; ++i)
             {
                 sum += getSumBits(_fileData[i]);
             }
@@ -462,7 +461,7 @@ namespace PKLib
         public ushort GetNumberSeen()
         {
             ushort sum = 0;
-            for (int i = offsets.seenOffset; i < offsets.seenOffset + offsets.ownedSeenSize; ++i)
+            for (int i = _offsets.Seen; i < _offsets.Seen + _offsets.OwnedSeenSize; ++i)
             {
                 sum += getSumBits(_fileData[i]);
             }
@@ -488,15 +487,15 @@ namespace PKLib
         public ushort GetPartySize()
         {
 
-            return (ushort)GetData(offsets.partySizeOffset);
+            return (ushort)GetData(_offsets.PartySize);
 
         }
 
         internal ushort GetBoxSize(ushort boxNum)
         {
-            if (GetData(offsets.currentlySetBoxOffset) + 1 == boxNum)
+            if (GetData(_offsets.CurrentlySetBox) + 1 == boxNum)
             {
-                return (ushort)GetData(offsets.currentBoxDataBegin);
+                return (ushort)GetData(_offsets.CurrentBoxDataBegin);
 
             }
             else
@@ -505,16 +504,16 @@ namespace PKLib
                 {
                     if (boxNum < 7)
                     {
-                        return (ushort)GetData(BOX_ONE_BEGIN + ((boxNum - 1) * offsets.nextBoxOffset));
+                        return (ushort)GetData(BOX_ONE_BEGIN + ((boxNum - 1) * _offsets.NextBox));
                     }
                     else
                     {
-                        return (ushort)GetData(BOX_SEVEN_BEGIN + ((boxNum - 7) * offsets.nextBoxOffset));
+                        return (ushort)GetData(BOX_SEVEN_BEGIN + ((boxNum - 7) * _offsets.NextBox));
                     }
                 }
                 else
                 {
-                    return GetData(BOX_ONE_BEGIN + ((boxNum - 1) * offsets.nextBoxOffset));
+                    return GetData(BOX_ONE_BEGIN + ((boxNum - 1) * _offsets.NextBox));
                 }
             }
         }
@@ -532,7 +531,7 @@ namespace PKLib
             }
             try
             {
-                string result = pokemonData.GetPokemonName(GetData(offsets.partySizeOffset + num));
+                string result = pokemonData.GetPokemonName(GetData(_offsets.PartySize + num));
                 return result;
             }
             catch (KeyNotFoundException ex)
@@ -568,9 +567,9 @@ namespace PKLib
             string[] types = new string[2];
             byte[] hexIn = new byte[2];
             ushort cursor;
-            if (GetData(offsets.currentlySetBoxOffset) + 1 == boxNumber)
+            if (GetData(_offsets.CurrentlySetBox) + 1 == boxNumber)
             {
-                currentBoxOffset = offsets.currentBoxDataBegin;
+                currentBoxOffset = _offsets.CurrentBoxDataBegin;
                 currentPokemonOffset = currentBoxOffset + BOX_SIZE_TO_FIRST_POKEMON_OFFSET;
             }
             else
@@ -579,16 +578,16 @@ namespace PKLib
                 {
                     if (boxNumber < 7)
                     {
-                        currentBoxOffset = BOX_ONE_BEGIN + ((boxNumber - 1) * offsets.nextBoxOffset);
+                        currentBoxOffset = BOX_ONE_BEGIN + ((boxNumber - 1) * _offsets.NextBox);
                     }
                     else
                     {
-                        currentBoxOffset = BOX_SEVEN_BEGIN + ((boxNumber - 7) * offsets.nextBoxOffset);
+                        currentBoxOffset = BOX_SEVEN_BEGIN + ((boxNumber - 7) * _offsets.NextBox);
                     }
                 }
                 else
                 {
-                    currentBoxOffset = BOX_ONE_BEGIN + ((boxNumber - 1) * offsets.nextBoxOffset);
+                    currentBoxOffset = BOX_ONE_BEGIN + ((boxNumber - 1) * _offsets.NextBox);
                 }
 
                 currentPokemonOffset = currentBoxOffset + BOX_SIZE_TO_FIRST_POKEMON_OFFSET;
@@ -607,9 +606,9 @@ namespace PKLib
 
 
                 name = pokemonData.GetPokemonName(GetData(currentPokemonOffset));
-                level = (ushort)GetData(currentPokemonOffset + offsets.boxLevelOffset);
-                ad = GetData(currentPokemonOffset + offsets.boxIvOffset);
-                ss = GetData(currentPokemonOffset + offsets.boxIvOffset + 1);
+                level = (ushort)GetData(currentPokemonOffset + _offsets.BoxLevel);
+                ad = GetData(currentPokemonOffset + _offsets.BoxIv);
+                ss = GetData(currentPokemonOffset + _offsets.BoxIv + 1);
                 attack = (ushort)(ad >> 4);
                 defense = (ushort)(ad & 0x0F);
                 speed = (ushort)(ss >> 4);
@@ -637,7 +636,7 @@ namespace PKLib
 
                 };
 
-                cursor = (ushort)(currentPokemonOffset + offsets.boxEvOffset);
+                cursor = (ushort)(currentPokemonOffset + _offsets.BoxEv);
                 ushort[] values = new ushort[5];
                 for (ushort index = 0; index < 5; ++index)
                 {
@@ -654,7 +653,7 @@ namespace PKLib
                     Special = values[4]
                 };
 
-                cursor = (ushort)(currentPokemonOffset + offsets.otIdOffset);
+                cursor = (ushort)(currentPokemonOffset + _offsets.PartyOtId);
                 hexIn = GetData(cursor++, cursor++);
                 int id = hexIn[0] << 8 | hexIn[1];
 
@@ -670,15 +669,15 @@ namespace PKLib
 
 
                 // Get OT name
-                    otNameOffset = currentBoxOffset + offsets.boxOtNameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
-                otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, offsets.trainerNameSize);
+                    otNameOffset = currentBoxOffset + _offsets.BoxOtName + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
+                otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, _offsets.TrainerNameSize);
 
-                nickNameOffset = currentBoxOffset + offsets.boxNicknameOffset + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
-                nickname = TextEncoding.GetEncodedText(this, nickNameOffset, 0x50, offsets.trainerNameSize);
+                nickNameOffset = currentBoxOffset + _offsets.BoxNickname + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
+                nickname = TextEncoding.GetEncodedText(this, nickNameOffset, 0x50, _offsets.TrainerNameSize);
 
                 current = new Pokemon(name, level, ivs, new Stats(), evs, friendshipValue, otName, nickname, types, id, 1);
                 boxPokemon.Add(current);
-                currentPokemonOffset += offsets.nextBoxPokemonOffset;
+                currentPokemonOffset += _offsets.NextBoxPokemon;
                 //otName.Clear();
 
             }
@@ -705,7 +704,7 @@ namespace PKLib
             IV ivs;
             Stats stats;
             EVs evs;
-            ushort currentPokemonOffset = (ushort)(offsets.partySizeOffset + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET);
+            ushort currentPokemonOffset = (ushort)(_offsets.PartySize + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET);
             string otName;
             string nickname;
             string[] types = new string[2];
@@ -721,9 +720,9 @@ namespace PKLib
                 {
                     speciesId = GetData(currentPokemonOffset);
                     speciesName = GetPartyPokemonName(i);
-                    level = (ushort)GetData(currentPokemonOffset + offsets.levelOffset);
-                    ad = GetData(currentPokemonOffset + offsets.attackDefenseOffset);
-                    ss = GetData(currentPokemonOffset + offsets.speedSpecialOffset);
+                    level = (ushort)GetData(currentPokemonOffset + _offsets.Level);
+                    ad = GetData(currentPokemonOffset + _offsets.AttackDefense);
+                    ss = GetData(currentPokemonOffset + _offsets.SpeedSpecial);
                     attack = (ushort)(ad >> 4);
                     defense = (ushort)(ad & 0x0F);
                     speed = (ushort)(ss >> 4);
@@ -731,8 +730,8 @@ namespace PKLib
 
                     if (Generation == 1)
                     {
-                        types[0] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset));
-                        types[1] = TypeData.GetName(GetData(currentPokemonOffset + offsets.genOneType1Offset + 1));
+                        types[0] = TypeData.GetName(GetData(currentPokemonOffset + _offsets.GenOneType1));
+                        types[1] = TypeData.GetName(GetData(currentPokemonOffset + _offsets.GenOneType1 + 1));
                     }
                     else
                     {
@@ -749,7 +748,7 @@ namespace PKLib
                         Special = special
                     };
 
-                    ushort cursor = (ushort)(currentPokemonOffset + offsets.statsOffset);
+                    ushort cursor = (ushort)(currentPokemonOffset + _offsets.Stats);
                     if (Generation == 1)
                     {
                         stats = new Stats
@@ -776,7 +775,7 @@ namespace PKLib
                     }
 
 
-                    cursor = (ushort)(currentPokemonOffset + offsets.evOffset);
+                    cursor = (ushort)(currentPokemonOffset + _offsets.Ev);
                     ushort[] values = new ushort[5];
                     byte[] hexIn = new byte[2];
                     for (ushort index = 0; index < 5; ++index)
@@ -794,7 +793,7 @@ namespace PKLib
                         Special = values[4]
                     };
 
-                    cursor = (ushort)(currentPokemonOffset + offsets.otIdOffset);
+                    cursor = (ushort)(currentPokemonOffset + _offsets.PartyOtId);
                     hexIn = GetData(cursor++, cursor++);
                     int id = hexIn[0] << 8 | hexIn[1];
 
@@ -809,15 +808,15 @@ namespace PKLib
                     }
 
 
-                    otNameOffset = (offsets.partySizeOffset + offsets.partyOtNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
-                    otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, offsets.trainerNameSize);
+                    otNameOffset = _offsets.PartySize + _offsets.PartyOtName + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
+                    otName = TextEncoding.GetEncodedText(this, otNameOffset, 0x50, _offsets.TrainerNameSize);
 
-                    nickOffset = (offsets.partySizeOffset + offsets.partyNickNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
-                    nickname = TextEncoding.GetEncodedText(this, nickOffset, 0x50, offsets.trainerNameSize);
+                    nickOffset = _offsets.PartySize + _offsets.PartyNickName + (OT_NICK_NEXT_NAME_OFFSET * (i - 1));
+                    nickname = TextEncoding.GetEncodedText(this, nickOffset, 0x50, _offsets.TrainerNameSize);
 
                     current = new Pokemon(speciesName, level, ivs, stats, evs, friendshipValue, otName, nickname, types, id, Generation);
                     partyPokemon.Add(current);
-                    currentPokemonOffset += (ushort)offsets.partyNextPokemonOffset; // increment by 44 bytes to get to next party pokemon
+                    currentPokemonOffset += (ushort)_offsets.PartyNextPokemon; // increment by 44 bytes to get to next party pokemon
                 }
                 catch (ArgumentException ex)
                 {
@@ -859,6 +858,8 @@ namespace PKLib
         public void AddPartyPokemon(PokemonHexData data)
         {
             ushort partySize = GetPartySize();
+            ushort partySizeOffset = _offsets.PartySize;
+            ushort partyNextPokemonOffset = _offsets.PartyNextPokemon;
             if (partySize >= 6)
             {
                 throw new ArgumentException("Error: Party is full. Must have an empty slot to add a pokemon to the party. Aborting.");
@@ -869,22 +870,22 @@ namespace PKLib
             //PatchHexByte(0x01, partySizeOffset); debug only
 
             // 
-            int insertOffset = offsets.partySizeOffset + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET + (offsets.partyNextPokemonOffset * (slotNumber - 1));
+            int insertOffset = partySizeOffset + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET + (partyNextPokemonOffset * (slotNumber - 1));
             PatchHexBytes(data.data, insertOffset);
 
-            PatchHexByte((byte)(partySize + 1), offsets.partySizeOffset);
-            PatchHexByte(data.data[0], offsets.partySizeOffset + slotNumber);
+            PatchHexByte((byte)(partySize + 1), partySizeOffset);
+            PatchHexByte(data.data[0], partySizeOffset + slotNumber);
 
             // Null terminator after party size (0xFF)
-            PatchHexByte(0xFF, offsets.partySizeOffset + slotNumber + 1);
+            PatchHexByte(0xFF, partySizeOffset + slotNumber + 1);
 
-            insertOffset = (offsets.partySizeOffset + offsets.partyOtNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (slotNumber - 1));
+            insertOffset = partySizeOffset + _offsets.PartyOtName + (OT_NICK_NEXT_NAME_OFFSET * (slotNumber - 1));
             PatchHexBytes(data.otName, insertOffset);
 
-            insertOffset = (offsets.partySizeOffset + offsets.partyNickNameOffset) + (OT_NICK_NEXT_NAME_OFFSET * (slotNumber - 1));
+            insertOffset = partySizeOffset + _offsets.PartyNickName + (OT_NICK_NEXT_NAME_OFFSET * (slotNumber - 1));
             PatchHexBytes(data.nickname, insertOffset);
 
-            insertOffset = (offsets.partySizeOffset + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET) + (offsets.partyNextPokemonOffset * (slotNumber - 1)) + partyOtIdOffset;
+            insertOffset = partySizeOffset + PARTY_SIZE_TO_FIRST_POKEMON_OFFSET + (partyNextPokemonOffset * (slotNumber - 1)) + _offsets.PartyOtId;
             PatchHexBytes(data.otId, insertOffset);
 
 
@@ -1097,7 +1098,8 @@ namespace PKLib
 
         public void AddItemToBag(Item item)
         {
-            ushort bagSize = (ushort)GetData(offsets.bagSizeOffset);
+            ushort bagSizeOffset = _offsets.BagSize;
+            ushort bagSize = (ushort)GetData(bagSizeOffset);
 
             if (bagSize >= 20)
             {
@@ -1112,9 +1114,9 @@ namespace PKLib
             }
 
             // Increment bag size in save data
-            PatchHexByte((byte)(bagSize + 1), offsets.bagSizeOffset);
+            PatchHexByte((byte)(bagSize + 1), bagSizeOffset);
 
-            int offset = (offsets.bagSizeOffset + 0x01) + (0x02 * bagSize);
+            int offset = bagSizeOffset + 0x01 + (0x02 * bagSize);
             byte[] hexBytes = { item.hexCode, item.getQuantityHex(), 0xFF };
             PatchHexBytes(hexBytes, offset);
 
@@ -1178,14 +1180,15 @@ namespace PKLib
 
         public void UpdateMainChecksum(int checksum)
         {
+            ushort checksumLocation = _offsets.MainChecksum;
             try
             {
 
                 if (Generation == 1)
                 {
                     byte checksumByte = (byte)(checksum & 0xFF);
-                    PatchHexByte(checksumByte, offsets.checksumLocation);
-                    Console.WriteLine($"Checksum updated to {checksumByte:X2} at {offsets.checksumLocation:X}");
+                    PatchHexByte(checksumByte, checksumLocation);
+                    Console.WriteLine($"Checksum updated to {checksumByte:X2} at {checksumLocation:X}");
                 }
                 else
                 {
@@ -1193,8 +1196,8 @@ namespace PKLib
                     byte highByte = (byte)((checksum >> 8) & 0xFF);
                     byte lowByte = (byte)(checksum & 0xFF);
                     byte[] checksumBytes = new byte[] { highByte, lowByte };
-                    PatchHexBytes(checksumBytes, offsets.checksumLocation);
-                    Console.WriteLine($"Gen 2 Checksum updated to {highByte:X2}{lowByte:X2} at {offsets.checksumLocation:X}");
+                    PatchHexBytes(checksumBytes, checksumLocation);
+                    Console.WriteLine($"Gen 2 Checksum updated to {highByte:X2}{lowByte:X2} at {checksumLocation:X}");
                 }
             }
             catch (ArgumentException ex)
@@ -1205,6 +1208,7 @@ namespace PKLib
 
         public void UpdateMainChecksum(byte[] checksumBytes)
         {
+            ushort checksumLocation = _offsets.MainChecksum;
             try
             {
                 if (checksumBytes.Length != 2)
@@ -1212,8 +1216,8 @@ namespace PKLib
                     throw new ArgumentException("Checksum byte array must be exactly 2 bytes long.");
                 }
 
-                PatchHexBytes(checksumBytes, offsets.checksumLocation);
-                Console.WriteLine($"Checksum updated to {BitConverter.ToString(checksumBytes).Replace("-", "")} at {offsets.checksumLocation:X}");
+                PatchHexBytes(checksumBytes, checksumLocation);
+                Console.WriteLine($"Checksum updated to {BitConverter.ToString(checksumBytes).Replace("-", "")} at {checksumLocation:X}");
             }
             catch (ArgumentException ex)
             {
@@ -1241,7 +1245,7 @@ namespace PKLib
 
         public string GetTrainerID()
         {
-            byte[] trainerIdHex = GetData(offsets.trainerId, offsets.trainerId + 1);
+            byte[] trainerIdHex = GetData(_offsets.TrainerId, _offsets.TrainerId + 1);
             ushort trainerId = (ushort)((trainerIdHex[0] << 8) | trainerIdHex[1]);
             return trainerId.ToString("D5");
         }
@@ -1254,7 +1258,7 @@ namespace PKLib
                 return;
             }
 
-            PatchHexBytes(name, offsets.trainerNameOffset);
+            PatchHexBytes(name, _offsets.TrainerName);
 
         }
 
@@ -1266,7 +1270,7 @@ namespace PKLib
                 return;
             }
 
-            PatchHexBytes(name, offsets.rivalNameOffset);
+            PatchHexBytes(name, _offsets.RivalName);
         }
 
         public void SetTrainerID(byte[] id)
@@ -1277,7 +1281,7 @@ namespace PKLib
                 return;
             }
 
-            PatchHexBytes(id, offsets.trainerId);
+            PatchHexBytes(id, _offsets.TrainerId);
         }
 
         public void SetMoney(int money)
@@ -1307,7 +1311,7 @@ namespace PKLib
                 encodedMoney = HexFunctions.IntToMoneyByte(money);
             }
 
-            PatchHexBytes(encodedMoney, offsets.moneyOffset);
+            PatchHexBytes(encodedMoney, _offsets.Money);
         }
 
         public ushort GetGeneration() {
