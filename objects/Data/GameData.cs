@@ -28,7 +28,7 @@ namespace PKLib
         public ushort Generation { get; set; }
         public bool IsCrystal { get; set; }
         public Party PartyPokemon { get; set;  }
-        private PokemonPC pcPokemon;
+        public PokemonPC PcPokemon { get; set;  }
         public Bag Items { get; set; }
         public ItemBox BoxItems { get; }
         public string TimeResetPassword { get; set; }
@@ -60,7 +60,7 @@ namespace PKLib
 
 
             PartyPokemon = new Party(this);
-            pcPokemon = new PokemonPC(this);
+            PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
                 Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
@@ -106,7 +106,7 @@ namespace PKLib
 
 
             PartyPokemon = new Party(this);
-            pcPokemon = new PokemonPC(this);
+            PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
                 Items = new Bag(GetBagItems(offsets.bagSizeOffset, 20));
@@ -119,7 +119,17 @@ namespace PKLib
                 GetTMPocketItems(offsets.tmPocketOffset));
             }
 
-            this.BoxItems = new ItemBox(GetBoxItems());
+            BoxItems = new ItemBox(GetBoxItems());
+
+            Trainer = new Trainer
+            {
+                Name = GetTrainerName(),
+                Id = GetTrainerID(),
+                RivalName = GetRivalName(),
+                NumberBadges = GetBadges().GetNumBadges(),
+                Money = GetMoney()
+
+            };
 
 
         }
@@ -1140,7 +1150,7 @@ namespace PKLib
             sb.AppendLine(PartyPokemon.GetInfo());
 
             sb.AppendLine();
-            sb.AppendLine(pcPokemon.GetPcPokemonInfo());
+            sb.AppendLine(PcPokemon.GetPcPokemonInfo());
 
             sb.AppendLine();
 

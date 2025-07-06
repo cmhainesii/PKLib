@@ -37,8 +37,6 @@ public class Box
 
         foreach (Pokemon current in pokemonList)
         {
-            sb.AppendLine($"Slot #{++count}:");
-            sb.AppendLine();
             sb.AppendLine(current.GetInfo());
         }
 

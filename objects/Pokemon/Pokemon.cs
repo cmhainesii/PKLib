@@ -84,10 +84,10 @@ public class Pokemon
         // Basic Information Section
         sb.AppendLine("┌─ BASIC INFORMATION ──────────────────┐");
         sb.AppendLine($"│ {"Species:",14}{_speciesName,22} │");
-        
+
         sb.AppendLine($"│ {"Level:",14}{_level,22} │");
         sb.AppendLine($"│ {"Type:",14}{(_types[1] != "None" ? $"{_types[0]}/{_types[1]}" : _types[0]),22} │");
-        
+
         // Print held item info if generation 2
         if (_generation != 1)
         {
@@ -95,7 +95,7 @@ public class Pokemon
             string heldItemName = _heldItem != 0 ? itemData.GetName(_heldItem) : "None";
             sb.AppendLine($"│ {"Held Item:",14}{heldItemName,22} │");
         }
-        
+
         sb.AppendLine("└──────────────────────────────────────┘");
         sb.AppendLine();
 
@@ -108,12 +108,12 @@ public class Pokemon
         sb.AppendLine($"│ {"Speed:",14}{_ivs.Speed,3} {(_ivs.Speed == 15 ? "★" : " "),1}  {GetIvBar(_ivs.Speed),10} │");
         sb.AppendLine($"│{"",-33}│");
         sb.AppendLine($"│ {"Total Score:",14}{GetIvScore(),3} / 60{"",-10}│");
-        sb.AppendLine($"│ {"Percentile:",14}{getIvPercentile():F1}%{"",-13}│");
+        sb.AppendLine($"│ {"Percentile:",14} {getIvPercentile():F1}%{"",-12}│");
         sb.AppendLine("└─────────────────────────────────┘");
         sb.AppendLine();
 
         // Current Stats Section (if available)
-        if(GetStatScore() > 0)
+        if (GetStatScore() > 0)
         {
             sb.AppendLine("┌─ CURRENT STATS ──────────────────────┐");
             sb.AppendLine($"│ {"HP:",14}{_stats.HP,22} │");
@@ -129,7 +129,7 @@ public class Pokemon
         }
 
         // Effort Values Section
-        if(GetEvScore() > 0) 
+        if (GetEvScore() > 0)
         {
             sb.AppendLine("┌─ EFFORT VALUES (EVs) ────────────────┐");
             sb.AppendLine($"│ {"HP:",14}{_evs.HP,22:N0} │");
@@ -144,22 +144,22 @@ public class Pokemon
         }
         else
         {
-            sb.AppendLine("┌─ EFFORT VALUES (EVs) ───────────────┐");
+            sb.AppendLine("┌─ EFFORT VALUES (EVs) ────────────────┐");
             sb.AppendLine($"│ {"All EVs:",14}{"0",22} │");
-            sb.AppendLine("└─────────────────────────────────────┘");
+            sb.AppendLine("└──────────────────────────────────────┘");
             sb.AppendLine();
         }
 
         // Trainer Information Section
         sb.AppendLine("┌─ TRAINER INFORMATION ────────────────┐");
         sb.AppendLine($"│ {"OT Name:",14}{_otName,22} │");
-        sb.AppendLine($"│ {"OT ID:",14}{_otId:D5}{"",-17} │");
-        
+        sb.AppendLine($"│ {"OT ID:",14}{_otId,22:D5} │");
+
         if (_friendship != 0)
         {
             sb.AppendLine($"│ {"Friendship:",14}{_friendship,22} │");
         }
-        
+
         sb.AppendLine("└──────────────────────────────────────┘");
 
         return sb.ToString();
@@ -180,9 +180,9 @@ public class Pokemon
         return _stats.HP + _stats.Attack + _stats.Defense + _stats.Speed + _stats.SpecialAttack + _stats.SpecialDefense;
     }
 
-    public int GetIvScore()
+    public ushort GetIvScore()
     {
-        return this._ivs.Attack + this._ivs.Defense + this._ivs.Speed + _ivs.Special;
+        return (ushort)(_ivs.Attack + _ivs.Defense + _ivs.Speed + _ivs.Special);
     }
 
     public double getIvPercentile()
