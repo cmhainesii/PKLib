@@ -34,8 +34,8 @@ namespace PKLib
         public Trainer Trainer { get; set; }
 
         private readonly Offsets _offsets;
-        internal ItemData itemData;
-        internal PokemonData pokemonData;
+        private ItemData itemData;
+        private PokemonData pokemonData;
 
 
 
@@ -43,8 +43,8 @@ namespace PKLib
         public GameData(string fileName)
         {
             _fileData = File.ReadAllBytes(fileName);
-            this.FileName = fileName;
-            this.Generation = determineGeneration();
+            FileName = fileName;
+            Generation = determineGeneration();
             _offsets = Offsets.ForGeneration(Generation, IsCrystal);
             itemData = new ItemData(Generation);
             pokemonData = new PokemonData(Generation);
