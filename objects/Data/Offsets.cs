@@ -43,7 +43,7 @@ public readonly struct Offsets
     public readonly ushort BoxDataEnd { get; init; }
     public readonly ushort BoxChecksumsStart { get; init; }
     
-    public static Offsets ForGeneration1() => new()
+    private static Offsets ForGeneration1() => new()
     {
         TrainerName = 0x2598,
         RivalName = 0x25F6,
@@ -87,7 +87,7 @@ public readonly struct Offsets
         BoxChecksumsStart = 0x5A4C
     };
 
-    public static Offsets ForCrystal() => new()
+    private static Offsets ForCrystal() => new()
     {
         TrainerName = 0x200B,
         RivalName = 0x2021,
@@ -130,7 +130,7 @@ public readonly struct Offsets
         BoxChecksumsStart = 0x5A4C
     };
 
-    public static Offsets ForGoldSilver() => new()
+    private static Offsets ForGoldSilver() => new()
     {
         TrainerName = 0x200B,
         RivalName = 0x2021,
