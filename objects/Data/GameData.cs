@@ -59,7 +59,7 @@ namespace PKLib
 
 
 
-            PartyPokemon = new Party(this);
+            PartyPokemon = new Party(GetPartyPokemon());
             PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
@@ -105,7 +105,7 @@ namespace PKLib
 
 
 
-            PartyPokemon = new Party(this);
+            PartyPokemon = new Party(GetPartyPokemon());
             PcPokemon = new PokemonPC(this);
             if (Generation == 1)
             {
@@ -519,7 +519,7 @@ namespace PKLib
             }
         }
 
-        public string GetPartyPokemonName(ushort num)
+        private string GetPartyPokemonName(ushort num)
         {
             if (num <= 0 || num >= 7)
             {
@@ -688,7 +688,7 @@ namespace PKLib
 
         
 
-        internal List<Pokemon> GetPartyPokemon(bool sortByScore = false)
+        private List<Pokemon> GetPartyPokemon(bool sortByScore = false)
         {
             List<Pokemon> partyPokemon = new List<Pokemon>();
             Pokemon current;

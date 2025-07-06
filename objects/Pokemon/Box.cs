@@ -33,7 +33,7 @@ public class Box
     public string GetInfo()
     {
         StringBuilder sb = new StringBuilder();
-        ushort count = 0;
+        
 
         foreach (Pokemon current in pokemonList)
         {

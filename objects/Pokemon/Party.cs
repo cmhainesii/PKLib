@@ -7,11 +7,6 @@ namespace PKLib
     {
     private List<Pokemon> _pokemonList;
 
-    public Party(GameData gameData)
-    {
-        _pokemonList = gameData.GetPartyPokemon();
-    }
-
     // Constructor overload for creating Party with a specific Pokemon list
     public Party(List<Pokemon> pokemonList)
     {

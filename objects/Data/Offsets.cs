@@ -42,6 +42,7 @@ public class Offsets
     public readonly int bankTwoBoxesEnd = 0x5A4B;
     public readonly ushort boxDataEnd;
     public readonly ushort boxChecksumsStart;
+    private readonly static ushort genderAndShadowOffsetCrystal = { 0x3E3D, 0x206A };
     
     public Offsets(int generation, bool cyrstal)
     {
